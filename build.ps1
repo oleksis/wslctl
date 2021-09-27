@@ -39,13 +39,13 @@ task Analyze {
 }
 
 task Build {
-    try {
+    #try {
         Write-Verbose -Message "Running Ps2exe on src"
         ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
-    }
-    catch {
-        throw "Couldn't run convert to exe"
-    }
+    #}
+    # catch {
+    #     throw "Couldn't run convert to exe"
+    # }
 }
 
 task Test {

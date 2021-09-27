@@ -1,8 +1,4 @@
-param (
-    [ValidateSet("Release", "debug")]$Configuration = "debug",
-    [Parameter(Mandatory=$false)][String]$NugetAPIKey,
-    [Parameter(Mandatory=$false)][Switch]$ExportAlias
-)
+param ()
 
 task Init {
     Write-Verbose -Message "Initializing Module PSScriptAnalyzer"
@@ -30,7 +26,7 @@ task Init {
     }
 }
 
-task Test {
+task Analyze {
     try {
         Write-Verbose -Message "Running PSScriptAnalyzer on src"
         Invoke-ScriptAnalyzer ".\src"
@@ -38,6 +34,19 @@ task Test {
     catch {
         throw "Couldn't run Script Analyzer"
     }
+}
+
+task Build {
+    try {
+        Write-Verbose -Message "Running Ps2exe on src"
+        ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
+    }
+    catch {
+        throw "Couldn't run convert to exe"
+    }
+}
+
+task Test {
 
     Write-Verbose -Message "Running Pester Tests"
     $Results = Invoke-Pester -Script ".\tests\*.ps1" -OutputFormat NUnitXml -OutputFile ".\tests\TestResults.xml"
@@ -47,32 +56,5 @@ task Test {
 }
 
 
-
-task Clean -if($Configuration -eq "Release") {
-    if(Test-Path ".\Output\temp"){
-        Write-Verbose -Message "Removing temp folders"
-        Remove-Item ".\Output\temp" -Recurse -Force
-    }
-}
-
-task Publish -if($Configuration -eq "Release"){
-
-    Write-Verbose -Message "Publishing Module to PowerShell gallery"
-    Write-Verbose -Message "Importing Module .\Output\$($ModuleName)\$ModuleVersion\$($ModuleName).psm1"
-    Import-Module ".\Output\$($ModuleName)\$ModuleVersion\$($ModuleName).psm1"
-    If((Get-Module -Name $ModuleName) -and ($NugetAPIKey)) {
-        try {
-            write-Verbose -Message "Publishing Module: $($ModuleName)"
-            Publish-Module -Name $ModuleName -NuGetApiKey $NugetAPIKey
-        }
-        catch {
-            throw "Failed publishing module to PowerShell Gallery"
-        }
-    }
-    else {
-        Write-Warning -Message "Something went wrong, couldn't publish module to PSGallery. Did you provide a NugetKey?."
-    }
-}
-
 # task . Init, Test, DebugBuild, Build, Clean, Publish
-task . Init, Test
+task . Init, Analyze, Build, Test

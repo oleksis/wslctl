@@ -41,7 +41,7 @@ task Analyze {
 task Build {
     #try {
         Write-Verbose -Message "Running Ps2exe on src"
-        ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
+        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe -nested:$true
     #}
     # catch {
     #     throw "Couldn't run convert to exe"

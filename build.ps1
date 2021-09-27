@@ -1,4 +1,6 @@
-param ()
+param (
+    [ValidateSet("Release", "debug")]$Configuration = "debug"
+)
 
 task Init {
     Write-Verbose -Message "Initializing Module PSScriptAnalyzer"

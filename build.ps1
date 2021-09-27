@@ -46,17 +46,17 @@ task Analyze {
 }
 
 task Build {
-    #try {
+    try {
         if (-Not(Test-Path ".\build" -PathType Container)){
             New-Item -Path ".\build" -ItemType Directory -ErrorAction Stop | Out-Null
         }
         Write-Verbose -Message "Running Ps2exe on src"
         #ps2exe .\src\wslctl.ps1 .\build\wslctl.exe
-        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wsl -nested:$true
-    #}
-    # catch {
-    #     throw "Couldn't run convert to exe"
-    # }
+        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe -nested:$true
+    }
+    catch {
+        throw "Couldn't run convert to exe"
+    }
 }
 
 task Test {

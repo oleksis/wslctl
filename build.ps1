@@ -31,7 +31,14 @@ task Init {
 task Analyze {
     try {
         Write-Verbose -Message "Running PSScriptAnalyzer on src"
-        Invoke-ScriptAnalyzer ".\src"
+        Invoke-ScriptAnalyzer ".\src" -Outvariable issues
+        $errors   = $issues.Where({$_.Severity -eq 'Error'})
+        $warnings = $issues.Where({$_.Severity -eq 'Warning'})
+        if ($errors) {
+            Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
+        } else {
+            Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
+        }
     }
     catch {
         throw "Couldn't run Script Analyzer"
@@ -41,7 +48,7 @@ task Analyze {
 task Build {
     #try {
         Write-Verbose -Message "Running Ps2exe on src"
-        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe -nested:$true
+        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
     #}
     # catch {
     #     throw "Couldn't run convert to exe"

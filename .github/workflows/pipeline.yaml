@@ -12,7 +12,7 @@ on:
 jobs:
   # 1st Job -- Building the module
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
         # Checkout the main branch
       - uses: actions/checkout@v2

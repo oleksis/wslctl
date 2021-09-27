@@ -48,6 +48,7 @@ task Analyze {
 task Build {
     #try {
         Write-Verbose -Message "Running Ps2exe on src"
+        Set-Alias powershell pwsh
         Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
     #}
     # catch {

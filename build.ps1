@@ -47,8 +47,11 @@ task Analyze {
 
 task Build {
     #try {
+        if (-Not(Test-Path ".\tests" -PathType Container)){
+            New-Item -Path ".\tests" -ItemType Directory -ErrorAction Stop | Out-Null
+        }
         Write-Verbose -Message "Running Ps2exe on src"
-        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
+        ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
     #}
     # catch {
     #     throw "Couldn't run convert to exe"
@@ -56,11 +59,15 @@ task Build {
 }
 
 task Test {
+    if (-Not(Test-Path ".\tests" -PathType Container)){
+        Write-Verbose -Message "No tests defined - skip"
+    } else {
 
-    Write-Verbose -Message "Running Pester Tests"
-    $Results = Invoke-Pester -Script ".\tests\*.ps1" -OutputFormat NUnitXml -OutputFile ".\tests\TestResults.xml"
-    if($Results.FailedCount -gt 0){
-        throw "$($Results.FailedCount) Tests failed"
+        Write-Verbose -Message "Running Pester Tests"
+        $Results = Invoke-Pester -Script ".\tests\*.ps1" -OutputFormat NUnitXml -OutputFile ".\tests\TestResults.xml"
+        if($Results.FailedCount -gt 0){
+            throw "$($Results.FailedCount) Tests failed"
+        }
     }
 }
 

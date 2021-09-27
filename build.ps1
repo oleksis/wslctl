@@ -51,7 +51,8 @@ task Build {
             New-Item -Path ".\build" -ItemType Directory -ErrorAction Stop | Out-Null
         }
         Write-Verbose -Message "Running Ps2exe on src"
-        ps2exe .\src\wslctl.ps1 .\build\wslctl.exe
+        #ps2exe .\src\wslctl.ps1 .\build\wslctl.exe
+        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wsl -nested:$true
     #}
     # catch {
     #     throw "Couldn't run convert to exe"

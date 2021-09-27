@@ -54,7 +54,8 @@ task Build {
         #ps2exe .\src\wslctl.ps1 .\build\wslctl.exe
         Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe -nested:$true
     }
-    catch {
+    catch [Exception] {
+        echo $_.Exception|format-list -force
         throw "Couldn't run convert to exe"
     }
 }

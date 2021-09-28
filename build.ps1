@@ -54,7 +54,8 @@ task Build {
         powershell -Command "&'Install-Module' -Name ps2exe -Scope CurrentUser"
         #ps2exe .\src\wslctl.ps1 .\build\wslctl.exe
         #Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe -nested:$true
-        powershell -Command "&'Invoke-ps2exe' -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe"
+        Invoke-ps2exe -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe
+        #powershell -Command "&'Invoke-ps2exe' -inputFile .\src\wslctl.ps1 -outputFile .\build\wslctl.exe"
     }
     catch [Exception] {
         echo $_.Exception|format-list -force

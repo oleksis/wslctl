@@ -36,10 +36,12 @@ jobs:
         # Installing the required powershell module, if not cached
       - name: Install required PowerShell modules
         if: steps.cacher.outputs.cache-hit != 'true'
-        shell: powershell
-        run: |
-            Set-PSRepository PSGallery -InstallationPolicy Trusted
-            Install-Module ${{ steps.psmodulecache.outputs.needed }} -ErrorAction Stop
+        uses: potatoqualitee/psmodulecache@v3.5
+        with:
+          shell: powershell
+#        run: |
+#            Set-PSRepository PSGallery -InstallationPolicy Trusted
+#            Install-Module ${{ steps.psmodulecache.outputs.needed }} -ErrorAction Stop
         
         # Running the InvokeBuild Module Invoke-Build command with "Release configuration"
       - name: Invoke Build

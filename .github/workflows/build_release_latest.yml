@@ -4,8 +4,6 @@ on:
     tags-ignore: 'v*'
     branches: '**'
 
-env:
-
 jobs:
 
   test:

@@ -11,7 +11,7 @@ $Settings = @{
     AppName = "wslctl"
     BuildOutput = "$PSScriptRoot\build"
     DistFolder = "$PSScriptRoot\build\dist"
-    Dependency = @('Coveralls', 'Pester','PsScriptAnalyzer','Ps2exe')
+    Dependency = @('Pester','PsScriptAnalyzer','Ps2exe')
     SourceFolder = "$PSScriptRoot\src"
 
     UnitTestParams = @{

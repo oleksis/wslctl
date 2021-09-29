@@ -39,8 +39,8 @@ $backupRegistryFile = "$backupLocation/register.json"  # Local backup register
 function Show-Help {
     Write-Host
     Write-Host  "Usage:" -ForegroundColor Yellow
-    Write-Host "   wslctl COMMAND [ARG...]" 
-    Write-Host "   wslctl [ --help | --version ]" 
+    Write-Host "   wslctl COMMAND [ARG...]"
+    Write-Host "   wslctl [ --help | --version ]"
     Write-Host
     # Wsl management
     Write-Host "Wsl managment commands:"  -ForegroundColor Yellow
@@ -73,7 +73,7 @@ function Show-Help {
 
 
 ## ----------------------------------------------------------------------------
-## Verify all installation environment 
+## Verify all installation environment
 ## ----------------------------------------------------------------------------
 function Install-WorkingEnvironment {
     # Check install directories
@@ -92,7 +92,7 @@ function Install-WorkingEnvironment {
 
 ###############################################################################
 ##
-##                          GENERIC FUNCTIONS 
+##                          GENERIC FUNCTIONS
 ##
 ###############################################################################
 
@@ -117,47 +117,47 @@ function Write-Color {
     $DefaultColor = $Color[0]
     # Add empty line before
     if ($LinesBefore -ne 0) {
-        for ($i = 0; $i -lt $LinesBefore; $i++) { Write-Host "`n" -NoNewline } 
-    } 
+        for ($i = 0; $i -lt $LinesBefore; $i++) { Write-Host "`n" -NoNewline }
+    }
     # Add Time before output
-    if ($ShowTime) {  
+    if ($ShowTime) {
         Write-Host "[$([datetime]::Now.ToString($TimeFormat))]" -NoNewline
     }
     # Add TABS before text
-    if ($StartTab -ne 0) { 
-        for ($i = 0; $i -lt $StartTab; $i++) { Write-Host "`t" -NoNewLine } 
+    if ($StartTab -ne 0) {
+        for ($i = 0; $i -lt $StartTab; $i++) { Write-Host "`t" -NoNewLine }
     }
 
     # Real deal coloring
     if ($Color.Count -ge $Text.Count) {
-        
+
         for ($i = 0; $i -lt $Text.Length; $i++) {
             Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
         }
     }
     else {
-        for ($i = 0; $i -lt $Color.Length ; $i++) { 
-            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine 
+        for ($i = 0; $i -lt $Color.Length ; $i++) {
+            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
         }
         for ($i = $Color.Length; $i -lt $Text.Length; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $DefaultColor -NoNewLine 
+            Write-Host $Text[$i] -ForegroundColor $DefaultColor -NoNewLine
         }
     }
 
     # Support for no new line
-    if ($NoNewLine -eq $true) { Write-Host -NoNewline } else { Write-Host } 
+    if ($NoNewLine -eq $true) { Write-Host -NoNewline } else { Write-Host }
 
     # Add empty line after
-    if ($LinesAfter -ne 0) {  
-        for ($i = 0; $i -lt $LinesAfter; $i++) { Write-Host "`n" } 
+    if ($LinesAfter -ne 0) {
+        for ($i = 0; $i -lt $LinesAfter; $i++) { Write-Host "`n" }
     }
 }
 
 ## ----------------------------------------------------------------------------
-## Show-Progress displays the progress of a long-running activity, task, 
-## operation, etc. It is displayed as a progress bar, along with the 
-## completed percentage of the task. It displays on a single line (where 
-## the cursor is located). As opposed to Write-Progress, it doesn't hide 
+## Show-Progress displays the progress of a long-running activity, task,
+## operation, etc. It is displayed as a progress bar, along with the
+## completed percentage of the task. It displays on a single line (where
+## the cursor is located). As opposed to Write-Progress, it doesn't hide
 ## the upper block of text in the PowerShell console.
 ## ----------------------------------------------------------------------------
 function Show-Progress {
@@ -174,7 +174,7 @@ function Show-Progress {
     $CurrentLine = $host.UI.RawUI.CursorPosition
     $WindowSizeWidth = $host.UI.RawUI.WindowSize.Width
     $DefaultForegroundColor = $host.UI.RawUI.ForegroundColor
-    
+
     # Width of the progress bar
     if ($WindowSizeWidth -gt 70) { $Width = 50 }
     else { $Width = ($WindowSizeWidth) - 20 }
@@ -204,10 +204,10 @@ function Show-Progress {
     Write-Host -NoNewline -ForegroundColor $ProgressBarForegroundColor "$ProgressBarItemStr$ProgressBarEmptyStr"
     Write-Host -NoNewline -ForegroundColor Cyan "] "
     Write-Host -NoNewline "$ProgressBarInfo$EndOfLineSpacesStr"
-    
+
     if ($Percentage -eq 100) { Write-Host }
     else { $host.UI.RawUI.CursorPosition = $CurrentLine }
-} 
+}
 
 
 ## ----------------------------------------------------------------------------
@@ -219,7 +219,7 @@ function Copy-File {
     Param( [string]$from, [string]$to)
     $result = $true
 
-    Write-Host  "Copy file $from -> $to" 
+    Write-Host  "Copy file $from -> $to"
     try {
         $ffile = [io.file]::OpenRead($from)
         $tofile = [io.file]::OpenWrite($to)
@@ -279,12 +279,12 @@ function Convert-ObjectToHashtable {
                     Convert-ObjectToHashtable -InputObject $object
                 }
             )
-            # Return the array but don't enumerate it because the object 
+            # Return the array but don't enumerate it because the object
             # may be pretty complex
             Write-Output -NoEnumerate $collection
 
         }
-        elseif ($InputObject -is [psobject]) { 
+        elseif ($InputObject -is [psobject]) {
             # If the object has properties that need enumeration
             # Convert it to its own hash table and return it
             $hash = @{}
@@ -305,7 +305,7 @@ function Convert-ObjectToHashtable {
 ## Validate specified argument array has number of item between min and max
 ## ----------------------------------------------------------------------------
 function Assert-ArgumentCount {
-    
+
     Param (
         [Parameter(Mandatory = $true)][string[]] $array,
         [Parameter(Mandatory = $true)][int] $minLength,
@@ -328,7 +328,7 @@ function Assert-ArgumentCount {
 
 ###############################################################################
 ##
-##                    SIMPLE JSON FILE MANIPULATION 
+##                    SIMPLE JSON FILE MANIPULATION
 ##
 ###############################################################################
 
@@ -349,7 +349,7 @@ function Convert-JsonToHashtable {
 ## Set json file content with hashtable
 ## ----------------------------------------------------------------------------
 function Convert-JsonFromHashtable {
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][hashtable]$hashtable
     )
@@ -362,7 +362,7 @@ function Convert-JsonFromHashtable {
 ## ----------------------------------------------------------------------------
 function Test-JsonHasKey {
     [OutputType('bool')]
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][string]$key
     )
@@ -376,7 +376,7 @@ function Test-JsonHasKey {
 ## Get key value from jsonfile (root key)
 ## ----------------------------------------------------------------------------
 function Get-JsonKeyValue {
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][string]$key
     )
@@ -390,7 +390,7 @@ function Get-JsonKeyValue {
 ## Set a key value pair to jsonfile (root key)
 ## ----------------------------------------------------------------------------
 function Set-JsonKeyValue {
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][string]$key,
         [Parameter(Mandatory = $true)]$value
@@ -405,12 +405,12 @@ function Set-JsonKeyValue {
 ## Set a key value pair to jsonfile (root key)
 ## ----------------------------------------------------------------------------
 function Remove-JsonKey {
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][string]$key
     )
     $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
-    if ($hashtable.ContainsKey($key)) { 
+    if ($hashtable.ContainsKey($key)) {
         $hashtable.Remove($key)
         Convert-JsonFromHashtable $jsonFile $hashtable
     }
@@ -421,7 +421,7 @@ function Remove-JsonKey {
 ## ----------------------------------------------------------------------------
 function Get-JsonKeys {
     [OutputType('array')]
-    Param( 
+    Param(
         [Parameter(Mandatory = $true)][string]$jsonFile
     )
     $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
@@ -431,7 +431,7 @@ function Get-JsonKeys {
 
 ###############################################################################
 ##
-##                         WSL WRAPPER FUNCTIONS 
+##                         WSL WRAPPER FUNCTIONS
 ##
 ###############################################################################
 
@@ -451,7 +451,7 @@ function ConvertTo-WslPath {
 function Test-WslInstanceIsRunning {
     [OutputType('bool')]
     Param( [Parameter(Mandatory = $true)][string]$wslName )
-    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
+    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
     $isrunning = [bool](& $wsl --list --running | Select-String -Pattern "^$wslName *"  -quiet)
@@ -465,7 +465,7 @@ function Test-WslInstanceIsRunning {
 function Test-WslInstanceIsCreated {
     [OutputType('bool')]
     Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
-    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
+    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
     $exists = [bool](& $wsl --list --verbose | Select-String -Pattern " +$wslName +" -quiet)
@@ -479,7 +479,7 @@ function Test-WslInstanceIsCreated {
 ## ----------------------------------------------------------------------------
 function Get-WslInstances {
     [OutputType('array')]
-    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
+    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
     $result = (& $wsl --list | Select-Object -Skip 1) | ? { $_ -ne "" }
@@ -493,7 +493,7 @@ function Get-WslInstances {
 ## ----------------------------------------------------------------------------
 function Get-WslInstancesWithStatus {
     [OutputType('array')]
-    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
+    # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
     $result = (& $wsl --list --verbose | Select-Object -Skip 1) | ? { $_ -ne "" }
@@ -551,10 +551,10 @@ function Initialize-WslInstanceDefaultUser {
 
 ###############################################################################
 ##
-##                           CACHE FUNCTIONS 
+##                           CACHE FUNCTIONS
 ##
 ###############################################################################
- 
+
 
 ## ----------------------------------------------------------------------------
 ## Import wsl with cache management
@@ -568,7 +568,7 @@ function Import-Wsl {
         Write-Host "Error: Instance '$wslName' already exists" -ForegroundColor Red
         return $false
     }
-    # Check target directory does not exists or is empty 
+    # Check target directory does not exists or is empty
     $wslNameLocation = "$wslLocaltion/$wslName"
     if (Test-Path -Path $wslNameLocation) {
         $directoryInfo = Get-ChildItem $wslNameLocation | Measure-Object
@@ -613,7 +613,7 @@ function Import-Wsl {
 
 ###############################################################################
 ##
-##                        BACKUP / RESTAURE FUNCTIONS 
+##                        BACKUP / RESTAURE FUNCTIONS
 ##
 ###############################################################################
 
@@ -646,7 +646,7 @@ function Backup-Wsl {
     & $wsl --distribution $wslName --exec gzip $backupTar
     Write-Host "Move to backup directory..."
     Move-Item -Path $backupTgz -Destination "$backupLocation/$backupTgz" -Force
-    
+
     # Finally append backup to the register
     Set-JsonKeyValue $backupRegistryFile "$wslName-$backupdate" @{
         wslname = $wslName
@@ -680,8 +680,8 @@ function Restore-Wsl {
         Write-Host "Error: File not found '$backupTgzLocation'" -ForegroundColor Red
         return $false
     }
-    
-    # Check if wsl instance exists and ask for confirmation if force parameter 
+
+    # Check if wsl instance exists and ask for confirmation if force parameter
     # is false
     if ((Test-WslInstanceIsCreated $wslName) -And (-Not $forced)) {
         Write-Host "*** WARNING ***" -ForegroundColor Yellow
@@ -689,11 +689,11 @@ function Restore-Wsl {
         Write-Host "with backup '$backupName'" -ForegroundColor Yellow
         While ($Selection -ne "Y" ) {
             $Selection = Read-Host "Proceed ? (Y/N)"
-            Switch ($Selection) { 
-                Y { Write-Host "Continuing with validation" -ForegroundColor Green } 
-                N { Write-Host "Breaking out of script" -ForegroundColor Red; return $false ; } 
+            Switch ($Selection) {
+                Y { Write-Host "Continuing with validation" -ForegroundColor Green }
+                N { Write-Host "Breaking out of script" -ForegroundColor Red; return $false ; }
                 default { Write-Host "Only Y/N are Valid responses" }
-            } 
+            }
         }
     }
 
@@ -705,7 +705,7 @@ function Restore-Wsl {
         }
     }
 
-    # Check target directory does not exists or is empty 
+    # Check target directory does not exists or is empty
     $wslNameLocation = "$wslLocaltion/$wslName"
     if (Test-Path -Path $wslNameLocation) {
         $directoryInfo = Get-ChildItem $wslNameLocation | Measure-Object
@@ -730,7 +730,7 @@ function Restore-Wsl {
 
 ###############################################################################
 ##
-##                                 MAIN 
+##                                 MAIN
 ##
 ###############################################################################
 
@@ -781,7 +781,7 @@ switch ($command) {
         if ($createUser) {
             Write-Host "* Create default wsl user"
             if (-Not (Initialize-WslInstanceDefaultUser $wslName )) { exit 1 }
-        }  
+        }
 
         # Restart instance
         Write-Host "* $wslName created"
@@ -845,7 +845,7 @@ switch ($command) {
             Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
             exit 1
         }
-        
+
         # Check script extension
         if (-Not ([IO.Path]::GetExtension($script) -eq '.sh')) {
             Write-Host "Error: script has to be a shell file (.sh)" -ForegroundColor Red
@@ -863,8 +863,8 @@ switch ($command) {
 
         # Copy script file to instance
         Write-Host "Execute $scriptNoPath on $wslName ..." -ForegroundColor Yellow
-        # pass Original path to the script 
-        & $wsl --distribution $wslName --exec cp $scriptInWslPath $scriptTmpFile 
+        # pass Original path to the script
+        & $wsl --distribution $wslName --exec cp $scriptInWslPath $scriptTmpFile
         & $wsl --distribution $wslName --exec chmod +x $scriptTmpFile
         & $wsl --distribution $wslName --exec SCRIPT_WINPATH=$scriptInWslPath $scriptTmpFile "$scriptInWslPath"
         & $wsl --distribution $wslName --exec rm $scriptTmpFile
@@ -968,7 +968,7 @@ switch ($command) {
                 Write-Host "* Backup storage cleared"
             }
 
-            { @("rm", "remove") -contains $_ } { 
+            { @("rm", "remove") -contains $_ } {
                 # Remove a backup by name
                 Assert-ArgumentCount $args 3
                 $backupName = $args[2]
@@ -988,7 +988,7 @@ switch ($command) {
                 Remove-JsonKey $backupRegistryFile $backupName
                 Write-Host "* Backup '$backupName' removed"
             }
-            
+
             { @("ls", "list") -contains $_ } {
                 # List backup resister keys
                 Assert-ArgumentCount $args 2
@@ -996,7 +996,7 @@ switch ($command) {
                 $backupArray = Convert-JsonToHashtable $backupRegistryFile
                 $backupArray.keys | ForEach { "  {0}`t`t - {1}" -f $_, $backupArray.$_.message }
             }
-            
+
             Default {
                 Write-Host "Error: Command '$command $subCommand' is not defined" -ForegroundColor Red
                 exit 1

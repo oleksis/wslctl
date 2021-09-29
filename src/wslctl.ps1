@@ -281,7 +281,7 @@ function Convert-ObjectToHashtable {
             )
             # Return the array but don't enumerate it because the object
             # may be pretty complex
-            Write-Output -NoEnumerate $collection
+            Write-Output $collection -NoEnumerate
 
         }
         elseif ($InputObject -is [psobject]) {
@@ -482,7 +482,7 @@ function Get-WslInstances {
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-    $result = (& $wsl --list | Select-Object -Skip 1) | ? { $_ -ne "" }
+    $result = (& $wsl --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
     [Console]::OutputEncoding = $prev
     return $result
 }
@@ -496,7 +496,7 @@ function Get-WslInstancesWithStatus {
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-    $result = (& $wsl --list --verbose | Select-Object -Skip 1) | ? { $_ -ne "" }
+    $result = (& $wsl --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
     [Console]::OutputEncoding = $prev
     return $result
 }
@@ -511,7 +511,7 @@ function Get-WslInstanceStatus {
         return "* $wslName is not a wsl instance"
     }
     else {
-        return (& $wsl --list --verbose | Select-String -Pattern " +$wslName +" | Out-String).Trim() | ForEach { (" " * 2) + $_ }
+        return (& $wsl --list --verbose | Select-String -Pattern " +$wslName +" | Out-String).Trim() | ForEach-Object { (" " * 2) + $_ }
     }
 }
 
@@ -626,7 +626,7 @@ function Backup-Wsl {
     Param( [string]$wslName, [string]$backupAnnotation)
     $backupdate = Get-Date -format "yyyyMMdd_HHmmss"
     $backupName = "$wslName-$backupdate"
-    $backupTar = "$wslName-$backupdate-amd64-wsl-rootfs.tar"
+    $backupTar = "$backupName-amd64-wsl-rootfs.tar"
     $backupTgz = "$backupTar.gz"
 
     # Check wslname instance already exists
@@ -736,7 +736,7 @@ function Restore-Wsl {
 
 
 $command = $args[0]
-if ($command -eq $null -or [string]::IsNullOrEmpty($command.Trim())) {
+if ($null -eq $command -or [string]::IsNullOrEmpty($command.Trim())) {
     Write-Host 'No command supplied' -ForegroundColor Red
     exit 1
 }
@@ -801,7 +801,7 @@ switch ($command) {
         # List all wsl installed
         Assert-ArgumentCount $args 1
         Write-Host "Wsl instances:" -ForegroundColor Yellow
-        Get-WslInstances | ForEach { (" " * 2) + $_ } | Sort
+        Get-WslInstances | ForEach-Object { (" " * 2) + $_ } | Sort-Object
     }
 
     start {
@@ -908,14 +908,14 @@ switch ($command) {
                 Assert-ArgumentCount $args 3
                 $pattern = $args[2]
                 Write-Host "Available distributions from pattern '$pattern':" -ForegroundColor Yellow
-                Get-JsonKeys $cacheRegistryFile | Select-String -Pattern ".*$pattern.*" | % { $_.Matches } | ForEach { (" " * 2) + $_ } | Sort
+                Get-JsonKeys $cacheRegistryFile | Select-String -Pattern ".*$pattern.*" | ForEach-Object { $_.Matches } | ForEach-Object { (" " * 2) + $_ } | Sort-Object
             }
 
             { @("ls", "list") -contains $_ } {
                 # List register keys
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Distributions (installable):" -ForegroundColor Yellow
-                Get-JsonKeys $cacheRegistryFile | ForEach { (" " * 2) + $_ } | Sort
+                Get-JsonKeys $cacheRegistryFile | ForEach-Object { (" " * 2) + $_ } | Sort-Object
             }
 
             Default {
@@ -994,7 +994,7 @@ switch ($command) {
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Backups (recoverable):" -ForegroundColor Yellow
                 $backupArray = Convert-JsonToHashtable $backupRegistryFile
-                $backupArray.keys | ForEach { "  {0}`t`t - {1}" -f $_, $backupArray.$_.message }
+                $backupArray.keys | ForEach-Object { "  {0}`t`t - {1}" -f $_, $backupArray.$_.message }
             }
 
             Default {

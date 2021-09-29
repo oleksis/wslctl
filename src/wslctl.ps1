@@ -44,30 +44,30 @@ function Show-Help {
     Write-Host
     # Wsl management
     Write-Host "Wsl managment commands:"  -ForegroundColor Yellow
-    Write-Color -Text "   create  <wsl_name> [<distro_name>] [--v1] ","Create a named wsl instance from distribution" -Color Green,White
-    Write-Color -Text "   rm      <wsl_name>                        ","Remove a wsl instance by name" -Color Green,White
-    Write-Color -Text "   ls                                        ","List all created wsl instance names" -Color Green,White
-    Write-Color -Text "   start   <wsl_name>                        ","Start an instance by name" -Color Green,White
-    Write-Color -Text "   stop    <wsl_name>                        ","Stop an instance by name" -Color Green,White
-    Write-Color -Text "   status [<wsl_name>]                       ","List all or specified wsl Instance status" -Color Green,White
-    Write-Color -Text "   halt                                      ","Shutdown all wsl instances" -Color Green,White
+    Write-Color -Text "   create  <wsl_name> [<distro_name>] [--v1] ", "Create a named wsl instance from distribution" -Color Green, White
+    Write-Color -Text "   rm      <wsl_name>                        ", "Remove a wsl instance by name" -Color Green, White
+    Write-Color -Text "   ls                                        ", "List all created wsl instance names" -Color Green, White
+    Write-Color -Text "   start   <wsl_name>                        ", "Start an instance by name" -Color Green, White
+    Write-Color -Text "   stop    <wsl_name>                        ", "Stop an instance by name" -Color Green, White
+    Write-Color -Text "   status [<wsl_name>]                       ", "List all or specified wsl Instance status" -Color Green, White
+    Write-Color -Text "   halt                                      ", "Shutdown all wsl instances" -Color Green, White
     Write-Host
 
     # wsl distributions registry management
     Write-Host "Wsl distribution registry commands:"  -ForegroundColor Yellow
-    Write-Color -Text "   registry update                           ","Pull distribution registry (to cache)" -Color Green,White
-    Write-Color -Text "   registry purge                            ","Remove all local registry content (from cache)" -Color Green,White
-    Write-Color -Text "   registry search <distro_pattern>          ","Extract defined distributions from local registry" -Color Green,White
-    Write-Color -Text "   registry ls                               ","List local registry distributions" -Color Green,White
+    Write-Color -Text "   registry update                           ", "Pull distribution registry (to cache)" -Color Green, White
+    Write-Color -Text "   registry purge                            ", "Remove all local registry content (from cache)" -Color Green, White
+    Write-Color -Text "   registry search <distro_pattern>          ", "Extract defined distributions from local registry" -Color Green, White
+    Write-Color -Text "   registry ls                               ", "List local registry distributions" -Color Green, White
     Write-Host
 
     # Wsl backup management
     Write-Host "Wsl backup managment commands:"  -ForegroundColor Yellow
-    Write-Color -Text "   backup create  <wsl_name> [<message>]     ","Create a new backup for the specified wsl instance" -Color Green,White
-    Write-Color -Text "   backup rm      <backup_name>              ","Remove a backup by name" -Color Green,White
-    Write-Color -Text "   backup restore <backup_name> [--force]    ","Restore a wsl instance from backup" -Color Green,White
-    Write-Color -Text "   backup ls                                 ","List all created backups" -Color Green,White
-    Write-Color -Text "   backup purge                              ","Remove all created backups" -Color Green,White
+    Write-Color -Text "   backup create  <wsl_name> [<message>]     ", "Create a new backup for the specified wsl instance" -Color Green, White
+    Write-Color -Text "   backup rm      <backup_name>              ", "Remove a backup by name" -Color Green, White
+    Write-Color -Text "   backup restore <backup_name> [--force]    ", "Restore a wsl instance from backup" -Color Green, White
+    Write-Color -Text "   backup ls                                 ", "List all created backups" -Color Green, White
+    Write-Color -Text "   backup purge                              ", "Remove all created backups" -Color Green, White
     Write-Host
 }
 
@@ -75,7 +75,7 @@ function Show-Help {
 ## ----------------------------------------------------------------------------
 ## Verify all installation environment 
 ## ----------------------------------------------------------------------------
-function Check-Install {
+function Install-WorkingEnvironment {
     # Check install directories
     if (-Not (Test-Path -Path $cacheLocation)) {
         New-Item -ItemType Directory -Force -Path $cacheLocation | Out-Null
@@ -134,7 +134,8 @@ function Write-Color {
         for ($i = 0; $i -lt $Text.Length; $i++) {
             Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
         }
-    } else {
+    }
+    else {
         for ($i = 0; $i -lt $Color.Length ; $i++) { 
             Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine 
         }
@@ -161,9 +162,9 @@ function Write-Color {
 ## ----------------------------------------------------------------------------
 function Show-Progress {
     Param(
-        [Parameter()][string]$Activity="Current Task",
-        [Parameter()][ValidateScript({$_ -ge 0})][long]$Current=0,
-        [Parameter()][ValidateScript({$_ -gt 0})][long]$Total=100
+        [Parameter()][string]$Activity = "Current Task",
+        [Parameter()][ValidateScript({ $_ -ge 0 })][long]$Current = 0,
+        [Parameter()][ValidateScript({ $_ -gt 0 })][long]$Total = 100
     )
 
     # Compute percent
@@ -171,13 +172,13 @@ function Show-Progress {
 
     # Continue displaying progress on the same line/position
     $CurrentLine = $host.UI.RawUI.CursorPosition
-    $WindowSizeWidth=$host.UI.RawUI.WindowSize.Width
-    $DefaultForegroundColor=$host.UI.RawUI.ForegroundColor
+    $WindowSizeWidth = $host.UI.RawUI.WindowSize.Width
+    $DefaultForegroundColor = $host.UI.RawUI.ForegroundColor
     
     # Width of the progress bar
     if ($WindowSizeWidth -gt 70) { $Width = 50 }
-    else { $Width = ($WindowSizeWidth) -20 }
-    if ($Width -lt 20) {"Window size is too small to display the progress bar";break}
+    else { $Width = ($WindowSizeWidth) - 20 }
+    if ($Width -lt 20) { "Window size is too small to display the progress bar"; break }
 
     # Default values
     $ProgressBarForegroundColor = $DefaultForegroundColor
@@ -205,7 +206,7 @@ function Show-Progress {
     Write-Host -NoNewline "$ProgressBarInfo$EndOfLineSpacesStr"
     
     if ($Percentage -eq 100) { Write-Host }
-    else {$host.UI.RawUI.CursorPosition = $CurrentLine }
+    else { $host.UI.RawUI.CursorPosition = $CurrentLine }
 } 
 
 
@@ -216,7 +217,7 @@ function Copy-File {
     [CmdletBinding()]
     [OutputType('bool')]
     Param( [string]$from, [string]$to)
-    $result=$true
+    $result = $true
 
     Write-Host  "Copy file $from -> $to" 
     try {
@@ -255,7 +256,7 @@ function Copy-File {
 ## ----------------------------------------------------------------------------
 ## Convert Serialized hastable to Object (recursive)
 ## ----------------------------------------------------------------------------
-function ConvertTo-Hashtable {
+function Convert-ObjectToHashtable {
     [CmdletBinding()]
     [OutputType('hashtable')]
     Param (
@@ -275,22 +276,24 @@ function ConvertTo-Hashtable {
         if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
             $collection = @(
                 foreach ($object in $InputObject) {
-                    ConvertTo-Hashtable -InputObject $object
+                    Convert-ObjectToHashtable -InputObject $object
                 }
             )
             # Return the array but don't enumerate it because the object 
             # may be pretty complex
             Write-Output -NoEnumerate $collection
 
-        } elseif ($InputObject -is [psobject]) { 
+        }
+        elseif ($InputObject -is [psobject]) { 
             # If the object has properties that need enumeration
             # Convert it to its own hash table and return it
             $hash = @{}
             foreach ($property in $InputObject.PSObject.Properties) {
-                $hash[$property.Name] = ConvertTo-Hashtable -InputObject $property.Value
+                $hash[$property.Name] = Convert-ObjectToHashtable -InputObject $property.Value
             }
             $hash
-        } else {
+        }
+        else {
             # If the object isn't an array, collection, or other object, it's already a hash table
             # So just return it.
             $InputObject
@@ -301,21 +304,21 @@ function ConvertTo-Hashtable {
 ## ----------------------------------------------------------------------------
 ## Validate specified argument array has number of item between min and max
 ## ----------------------------------------------------------------------------
-function ValidateCount-Arguments {
+function Assert-ArgumentCount {
     
     Param (
-        [Parameter(Mandatory=$true)][string[]] $array,
-        [Parameter(Mandatory=$true)][int] $minLength,
-        [Parameter(Mandatory=$false)][int] $maxLength
+        [Parameter(Mandatory = $true)][string[]] $array,
+        [Parameter(Mandatory = $true)][int] $minLength,
+        [Parameter(Mandatory = $false)][int] $maxLength
     )
-    if ($maxLength -lt $minLength){
+    if ($maxLength -lt $minLength) {
         $maxLength = $minLength
     }
-    if ($array.count -lt $minLength){
+    if ($array.count -lt $minLength) {
         Write-Host "Error: too few arguments" -ForegroundColor Red
         exit 1
     }
-    if ($array.count -gt $maxLength){
+    if ($array.count -gt $maxLength) {
         Write-Host "Error: too many arguments" -ForegroundColor Red
         exit 1
     }
@@ -332,12 +335,12 @@ function ValidateCount-Arguments {
 ## ----------------------------------------------------------------------------
 ## Download json file content as hashtable
 ## ----------------------------------------------------------------------------
-function JSON-GetContentTo-Hashtable {
+function Convert-JsonToHashtable {
     [OutputType('hashtable')]
-    Param( [Parameter(Mandatory=$true)][string]$jsonFile )
+    Param( [Parameter(Mandatory = $true)][string]$jsonFile )
     $hashtable = @{}
     if (Test-Path -Path $jsonFile) {
-        $hashtable = Get-Content -Path $jsonFile -Raw | ConvertFrom-JSON  | ConvertTo-HashTable
+        $hashtable = Get-Content -Path $jsonFile -Raw | ConvertFrom-JSON  | Convert-ObjectToHashtable
     }
     return $hashtable
 }
@@ -345,11 +348,11 @@ function JSON-GetContentTo-Hashtable {
 ## ----------------------------------------------------------------------------
 ## Set json file content with hashtable
 ## ----------------------------------------------------------------------------
-function JSON-SetContentFrom-Hashtable {
+function Convert-JsonFromHashtable {
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile,
-        [Parameter(Mandatory=$true)][hashtable]$hashtable
-     )
+        [Parameter(Mandatory = $true)][string]$jsonFile,
+        [Parameter(Mandatory = $true)][hashtable]$hashtable
+    )
     $hashtable | ConvertTo-JSON | Set-Content -Path $jsonFile
 }
 
@@ -357,28 +360,28 @@ function JSON-SetContentFrom-Hashtable {
 ## ----------------------------------------------------------------------------
 ## Test Set a key value pair to jsonfile (root key)
 ## ----------------------------------------------------------------------------
-function JSON-HasKey {
+function Test-JsonHasKey {
     [OutputType('bool')]
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile,
-        [Parameter(Mandatory=$true)][string]$key
+        [Parameter(Mandatory = $true)][string]$jsonFile,
+        [Parameter(Mandatory = $true)][string]$key
     )
-    $result=$false
-    $hashtable = [hashtable](JSON-GetContentTo-Hashtable $jsonFile)
-    if ($hashtable.ContainsKey($key)) { $result=$true }
+    $result = $false
+    $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
+    if ($hashtable.ContainsKey($key)) { $result = $true }
     return $result
 }
 
 ## ----------------------------------------------------------------------------
 ## Get key value from jsonfile (root key)
 ## ----------------------------------------------------------------------------
-function JSON-GetKey {
+function Get-JsonKeyValue {
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile,
-        [Parameter(Mandatory=$true)][string]$key
+        [Parameter(Mandatory = $true)][string]$jsonFile,
+        [Parameter(Mandatory = $true)][string]$key
     )
-    $result=$null
-    $hashtable = [hashtable](JSON-GetContentTo-Hashtable $jsonFile)
+    $result = $null
+    $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
     if ($hashtable.ContainsKey($key)) { $result = $hashtable.$key }
     return $result
 }
@@ -386,43 +389,42 @@ function JSON-GetKey {
 ## ----------------------------------------------------------------------------
 ## Set a key value pair to jsonfile (root key)
 ## ----------------------------------------------------------------------------
-function JSON-SetKey {
+function Set-JsonKeyValue {
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile,
-        [Parameter(Mandatory=$true)][string]$key,
-        [Parameter(Mandatory=$true)]$value
+        [Parameter(Mandatory = $true)][string]$jsonFile,
+        [Parameter(Mandatory = $true)][string]$key,
+        [Parameter(Mandatory = $true)]$value
     )
-    $hashtable = [hashtable](JSON-GetContentTo-Hashtable $jsonFile)
+    $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
     if ($hashtable.ContainsKey($key)) { $hashtable.Remove($key) }
     $hashtable.Add($key, $value)
-    JSON-SetContentFrom-Hashtable $jsonFile $hashtable
+    Convert-JsonFromHashtable $jsonFile $hashtable
 }
 
 ## ----------------------------------------------------------------------------
 ## Set a key value pair to jsonfile (root key)
 ## ----------------------------------------------------------------------------
-function JSON-RemoveKey {
+function Remove-JsonKey {
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile,
-        [Parameter(Mandatory=$true)][string]$key
+        [Parameter(Mandatory = $true)][string]$jsonFile,
+        [Parameter(Mandatory = $true)][string]$key
     )
-    $hashtable = [hashtable](JSON-GetContentTo-Hashtable $jsonFile)
+    $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
     if ($hashtable.ContainsKey($key)) { 
         $hashtable.Remove($key)
-        JSON-SetContentFrom-Hashtable $jsonFile $hashtable
+        Convert-JsonFromHashtable $jsonFile $hashtable
     }
 }
 
 ## ----------------------------------------------------------------------------
 ## List of jsonfile root keys
 ## ----------------------------------------------------------------------------
-function JSON-Keys {
+function Get-JsonKeys {
     [OutputType('array')]
     Param( 
-        [Parameter(Mandatory=$true)][string]$jsonFile
+        [Parameter(Mandatory = $true)][string]$jsonFile
     )
-    $result=$false
-    $hashtable = [hashtable](JSON-GetContentTo-Hashtable $jsonFile)
+    $hashtable = [hashtable](Convert-JsonToHashtable $jsonFile)
     return $hashtable.keys
 }
 
@@ -436,9 +438,9 @@ function JSON-Keys {
 ## ----------------------------------------------------------------------------
 ## Transform a windows path to a wsl access path
 ## ----------------------------------------------------------------------------
-function Wsl-Path {
+function ConvertTo-WslPath {
     [OutputType('string')]
-    Param([Parameter(Mandatory=$true)][string]$path)
+    Param([Parameter(Mandatory = $true)][string]$path)
     wsl 'wslpath' -u $path.Replace('\', '\\');
 }
 
@@ -446,9 +448,9 @@ function Wsl-Path {
 ## ----------------------------------------------------------------------------
 ## Check if a named wsl instance is Running
 ## ----------------------------------------------------------------------------
-function Wsl-IsRunning {
+function Test-WslInstanceIsRunning {
     [OutputType('bool')]
-    Param( [Parameter(Mandatory=$true)][string]$wslName )
+    Param( [Parameter(Mandatory = $true)][string]$wslName )
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
@@ -460,9 +462,9 @@ function Wsl-IsRunning {
 ## ----------------------------------------------------------------------------
 ## Check if a named wsl instance has been created
 ## ----------------------------------------------------------------------------
-function Wsl-Exists {
+function Test-WslInstanceIsCreated {
     [OutputType('bool')]
-    Param( [Parameter(Mandatory=$true,ValueFromPipeline=$true)][string]$wslName )
+    Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
@@ -475,12 +477,12 @@ function Wsl-Exists {
 ## ----------------------------------------------------------------------------
 ## Array of installed distributions
 ## ----------------------------------------------------------------------------
-function Wsl-List {
+function Get-WslInstances {
     [OutputType('array')]
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-    $result = (& $wsl --list | Select-Object -Skip 1) | ? {$_ -ne ""}
+    $result = (& $wsl --list | Select-Object -Skip 1) | ? { $_ -ne "" }
     [Console]::OutputEncoding = $prev
     return $result
 }
@@ -489,12 +491,12 @@ function Wsl-List {
 ## ----------------------------------------------------------------------------
 ## Array of installed distribution with status
 ## ----------------------------------------------------------------------------
-function Wsl-ListWithStatus {
+function Get-WslInstancesWithStatus {
     [OutputType('array')]
     # Inexplicably, wsl --list --running produces UTF-16LE-encoded ("Unicode"-encoded) output 
     # rather than respecting the console's (OEM) code page.
     $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-    $result = (& $wsl --list --verbose | Select-Object -Skip 1) | ? {$_ -ne ""}
+    $result = (& $wsl --list --verbose | Select-Object -Skip 1) | ? { $_ -ne "" }
     [Console]::OutputEncoding = $prev
     return $result
 }
@@ -502,13 +504,14 @@ function Wsl-ListWithStatus {
 ## ----------------------------------------------------------------------------
 ## Get wsl instance status
 ## ----------------------------------------------------------------------------
-function Wsl-GetStatus {
+function Get-WslInstanceStatus {
     [OutputType('string')]
-    Param( [Parameter(Mandatory=$true,ValueFromPipeline=$true)][string]$wslName )
-    if (-Not (Wsl-Exists $wslName)){
+    Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
+    if (-Not (Test-WslInstanceIsCreated $wslName)) {
         return "* $wslName is not a wsl instance"
-    } else {
-        return (& $wsl --list --verbose | Select-String -Pattern " +$wslName +" | Out-String).Trim() | ForEach {(" "*2) + $_}
+    }
+    else {
+        return (& $wsl --list --verbose | Select-String -Pattern " +$wslName +" | Out-String).Trim() | ForEach { (" " * 2) + $_ }
     }
 }
 
@@ -516,10 +519,10 @@ function Wsl-GetStatus {
 ## ----------------------------------------------------------------------------
 ## Remove a named wsl instance
 ## ----------------------------------------------------------------------------
-function Wsl-Remove {
+function Remove-WslInstance {
     [OutputType('bool')]
-    Param( [Parameter(Mandatory=$true,ValueFromPipeline=$true)][string]$wslName )
-    if (-Not (Wsl-Exists $wslName)) {
+    Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
+    if (-Not (Test-WslInstanceIsCreated $wslName)) {
         Write-Host "Error: Instance '$wslName' not found" -ForegroundColor Red
         return $false;
     }
@@ -530,10 +533,10 @@ function Wsl-Remove {
 ## ----------------------------------------------------------------------------
 ## Setup wsl instance default user
 ## ----------------------------------------------------------------------------
-function Wsl-Setup-DefaultUser {
+function Initialize-WslInstanceDefaultUser {
     [OutputType('bool')]
-    Param( [Parameter(Mandatory=$true,ValueFromPipeline=$true)][string]$wslName )
-    if (-Not (Wsl-Exists $wslName)) {
+    Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
+    if (-Not (Test-WslInstanceIsCreated $wslName)) {
         Write-Host "Error: Instance '$wslName' not found" -ForegroundColor Red
         return $false;
     }
@@ -556,12 +559,12 @@ function Wsl-Setup-DefaultUser {
 ## ----------------------------------------------------------------------------
 ## Import wsl with cache management
 ## ----------------------------------------------------------------------------
-function Wsl-Import {
+function Import-Wsl {
     [OutputType('bool')]
     Param( [string]$wslName, [string]$distroName, [int]$wslVersion = 2)
 
     # Check wslname instance not already exists
-    if (Wsl-Exists $wslName) {
+    if (Test-WslInstanceIsCreated $wslName) {
         Write-Host "Error: Instance '$wslName' already exists" -ForegroundColor Red
         return $false
     }
@@ -575,8 +578,8 @@ function Wsl-Import {
         }
     }
     # Get distroname definition
-    $distroPackage = JSON-GetKey $cacheRegistryFile $distroName
-    if ($null -eq $distroPackage){
+    $distroPackage = Get-JsonKeyValue $cacheRegistryFile $distroName
+    if ($null -eq $distroPackage) {
         Write-Host "Error: Distribution '$distroName' not found in registry" -ForegroundColor Red
         Write-Host "  - Please use the 'update' command to refresh the registry."
         return $false
@@ -591,7 +594,8 @@ function Wsl-Import {
             Write-Host "Error: Registry endpoint not reachable" -ForegroundColor Red
             return $false
         }
-    } else {
+    }
+    else {
         Write-Host "Distribution '$distroName' already cached ..."
     }
 
@@ -617,7 +621,7 @@ function Wsl-Import {
 ## ----------------------------------------------------------------------------
 ## Backup wsl instance
 ## ----------------------------------------------------------------------------
-function Wsl-Backup {
+function Backup-Wsl {
     [OutputType('bool')]
     Param( [string]$wslName, [string]$backupAnnotation)
     $backupdate = Get-Date -format "yyyyMMdd_HHmmss"
@@ -626,12 +630,12 @@ function Wsl-Backup {
     $backupTgz = "$backupTar.gz"
 
     # Check wslname instance already exists
-    if (-Not (Wsl-Exists $wslName)) {
+    if (-Not (Test-WslInstanceIsCreated $wslName)) {
         Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
         return $false
     }
     # Stop if required
-    if (Wsl-IsRunning $wslName){
+    if (Test-WslInstanceIsRunning $wslName) {
         Write-Host "Stop instance '$wslName'"
         & $wsl --terminate $wslName
     }
@@ -644,11 +648,11 @@ function Wsl-Backup {
     Move-Item -Path $backupTgz -Destination "$backupLocation/$backupTgz" -Force
     
     # Finally append backup to the register
-    JSON-SetKey $backupRegistryFile "$wslName-$backupdate" @{
+    Set-JsonKeyValue $backupRegistryFile "$wslName-$backupdate" @{
         wslname = $wslName
         message = $backupAnnotation
         archive = $backupTgz
-        date = $backupdate
+        date    = $backupdate
     }
     return $true
 }
@@ -657,13 +661,13 @@ function Wsl-Backup {
 ## ----------------------------------------------------------------------------
 ## Restore a wsl instance
 ## ----------------------------------------------------------------------------
-function Wsl-Restore {
+function Restore-Wsl {
     [OutputType('bool')]
     Param( [string]$backupName, [bool]$forced)
 
     # Read backup properties
-    $backupProperties = JSON-GetKey $backupRegistryFile $backupName
-    if ($null -eq $backupProperties){
+    $backupProperties = Get-JsonKeyValue $backupRegistryFile $backupName
+    if ($null -eq $backupProperties) {
         Write-Host "Error: Backup '$backupName' does not exists" -ForegroundColor Red
         return $false
     }
@@ -672,31 +676,31 @@ function Wsl-Restore {
 
     Write-Host "Check archive file..."
     $backupTgzLocation = "$backupLocation/$backupTgz"
-    if (-Not (Test-Path -Path $backupTgzLocation)){
+    if (-Not (Test-Path -Path $backupTgzLocation)) {
         Write-Host "Error: File not found '$backupTgzLocation'" -ForegroundColor Red
         return $false
     }
     
     # Check if wsl instance exists and ask for confirmation if force parameter 
     # is false
-    if ((Wsl-Exists $wslName) -And (-Not $forced)){
+    if ((Test-WslInstanceIsCreated $wslName) -And (-Not $forced)) {
         Write-Host "*** WARNING ***" -ForegroundColor Yellow
         Write-Host "This action will replace the existing '$wslName' instance" -ForegroundColor Yellow
         Write-Host "with backup '$backupName'" -ForegroundColor Yellow
-        While($Selection -ne "Y" ){
+        While ($Selection -ne "Y" ) {
             $Selection = Read-Host "Proceed ? (Y/N)"
             Switch ($Selection) { 
-                Y {Write-Host "Continuing with validation" -ForegroundColor Green } 
-                N {Write-Host "Breaking out of script" -ForegroundColor Red; return $false ;} 
-                default {Write-Host "Only Y/N are Valid responses"}
+                Y { Write-Host "Continuing with validation" -ForegroundColor Green } 
+                N { Write-Host "Breaking out of script" -ForegroundColor Red; return $false ; } 
+                default { Write-Host "Only Y/N are Valid responses" }
             } 
         }
     }
 
     # Remove existing instance
-    if (Wsl-Exists $wslName){
+    if (Test-WslInstanceIsCreated $wslName) {
         Write-Host "Destroy existing '$wslName' instance..."
-        if (-Not(Wsl-Remove $wslName)){
+        if (-Not(Remove-WslInstance $wslName)) {
             return $false
         }
     }
@@ -737,7 +741,7 @@ if ($command -eq $null -or [string]::IsNullOrEmpty($command.Trim())) {
     exit 1
 }
 
-Check-Install
+Install-WorkingEnvironment
 
 # Switch Statement on input Command
 switch ($command) {
@@ -746,7 +750,7 @@ switch ($command) {
 
     create {
         # Instanciate new wsl instance
-        ValidateCount-Arguments $args 2 5
+        Assert-ArgumentCount $args 2 5
         $wslName = $null
         $distroName = $null
         $wslVersion = 2
@@ -755,11 +759,11 @@ switch ($command) {
         $null, $args = $args
         foreach ($element in $args) {
             switch ($element) {
-                --no-user  { $createUser = $false }
-                --v1       { $wslVersion = 1 }
+                --no-user { $createUser = $false }
+                --v1 { $wslVersion = 1 }
                 Default {
-                    if ( $null -eq $wslName ){ $wslName = $element }
-                    elseif  ( $null -eq $distroName ) { $distroName = $element }
+                    if ( $null -eq $wslName ) { $wslName = $element }
+                    elseif ( $null -eq $distroName ) { $distroName = $element }
                     else {
                         Write-Host "Error: Invalid parameter" -ForegroundColor Red
                         exit 1
@@ -768,15 +772,15 @@ switch ($command) {
             }
         }
 
-        if ( $null -eq $distroName){ $distroName = $wslName }
+        if ( $null -eq $distroName) { $distroName = $wslName }
 
         Write-Host "* Import $wslName"
-        if (-Not (Wsl-Import $wslName $distroName $wslVersion)) { exit 1 }
+        if (-Not (Import-Wsl $wslName $distroName $wslVersion)) { exit 1 }
 
         # Create default wsl user
-        if ($createUser){
+        if ($createUser) {
             Write-Host "* Create default wsl user"
-            if (-Not (Wsl-Setup-DefaultUser $wslName )) { exit 1 }
+            if (-Not (Initialize-WslInstanceDefaultUser $wslName )) { exit 1 }
         }  
 
         # Restart instance
@@ -786,23 +790,23 @@ switch ($command) {
 
     { @("rm", "remove") -contains $_ } {
         # Remove the specified wsl instance
-        ValidateCount-Arguments $args 2
+        Assert-ArgumentCount $args 2
         $wslName = $args[1]
-        if (Wsl-Remove $wslName) {
+        if (Remove-WslInstance $wslName) {
             Write-Host "*  $wslName removed"
         }
     }
 
     { @("ls", "list") -contains $_ } {
         # List all wsl installed
-        ValidateCount-Arguments $args 1
+        Assert-ArgumentCount $args 1
         Write-Host "Wsl instances:" -ForegroundColor Yellow
-        Wsl-List | ForEach {(" "*2) + $_} | Sort
+        Get-WslInstances | ForEach { (" " * 2) + $_ } | Sort
     }
 
     start {
         # Starts wsl instance by starting a long bash background process in it
-        ValidateCount-Arguments $args 2
+        Assert-ArgumentCount $args 2
         $wslName = $args[1]
         & $wsl --distribution $wslName bash -c "nohup sleep 99999 </dev/null >/dev/null 2>&1 & sleep 1"
         if ($?) { Write-Host "*  $wslName started" ; }
@@ -810,40 +814,40 @@ switch ($command) {
 
     stop {
         # Stop wsl instances
-        ValidateCount-Arguments $args 2
+        Assert-ArgumentCount $args 2
         $wslName = $args[1]
         & $wsl --terminate $wslName
         if ($?) { Write-Host "*  $wslName stopped" }
     }
 
-    status  {
-        ValidateCount-Arguments $args 1 2
+    status {
+        Assert-ArgumentCount $args 1 2
         if ($args.count -eq 1) {
             # List all wsl instance status
             # Remove wsl List header and display own
             Write-Host "Wsl instances status:" -ForegroundColor Yellow
-            Wsl-ListWithStatus
+            Get-WslInstancesWithStatus
         }
-         else   {
+        else {
             # List status for specific wsl instance
             $wslName = $args[1]
-            Wsl-GetStatus $wslName
+            Get-WslInstanceStatus $wslName
         }
     }
 
     exec {
-        ValidateCount-Arguments $args 3
+        Assert-ArgumentCount $args 3
         $wslName = $args[1]
         $script = $args[2]
 
         # Check wslname instance already exists
-        if (-Not (Wsl-Exists $wslName)) {
+        if (-Not (Test-WslInstanceIsCreated $wslName)) {
             Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
             exit 1
         }
         
         # Check script extension
-        if (-Not ([IO.Path]::GetExtension($script) -eq '.sh')){
+        if (-Not ([IO.Path]::GetExtension($script) -eq '.sh')) {
             Write-Host "Error: script has to be a shell file (.sh)" -ForegroundColor Red
             exit 1
         }
@@ -853,7 +857,7 @@ switch ($command) {
             Write-Host "Error: script path not found" -ForegroundColor Red
             exit 1
         }
-        $scriptInWslPath = Wsl-Path $winScriptFullPath
+        $scriptInWslPath = ConvertTo-WslPath $winScriptFullPath
         $scriptNoPath = Split-Path $script -leaf
         $scriptTmpFile = "/tmp/$scriptNoPath"
 
@@ -866,9 +870,9 @@ switch ($command) {
         & $wsl --distribution $wslName --exec rm $scriptTmpFile
     }
 
-    halt  {
+    halt {
         # stop all wsl instances
-        ValidateCount-Arguments $args 1
+        Assert-ArgumentCount $args 1
         & $wsl --shutdown
         Write-Host "* Wsl halted"
     }
@@ -877,14 +881,14 @@ switch ($command) {
     # -- Wsl distribution registry commands ---------------------------------
 
     registry {
-        ValidateCount-Arguments $args 2 3
+        Assert-ArgumentCount $args 2 3
         $subCommand = $args[1]
 
         switch ($subCommand) {
 
             update {
                 # Update the cache registry file (in cache)
-                ValidateCount-Arguments $args 2
+                Assert-ArgumentCount $args 2
                 if (-Not (Copy-File $registryEndpoint $cacheRegistryFile)) {
                     Write-Host "Error: Registry endpoint not reachable" -ForegroundColor Red
                     exit 1
@@ -894,24 +898,24 @@ switch ($command) {
 
             purge {
                 # remove the cache directory
-                ValidateCount-Arguments $args 2
+                Assert-ArgumentCount $args 2
                 Remove-Item -LiteralPath $cacheLocation -Force -Recurse -ErrorAction Ignore | Out-Null
                 Write-Host "* Local registry cache cleared"
             }
 
             search {
                 # Search available distribution by regexp
-                ValidateCount-Arguments $args 3
+                Assert-ArgumentCount $args 3
                 $pattern = $args[2]
                 Write-Host "Available distributions from pattern '$pattern':" -ForegroundColor Yellow
-                JSON-Keys $cacheRegistryFile | Select-String -Pattern ".*$pattern.*" | %{$_.Matches} | ForEach {(" "*2) + $_} | Sort
+                Get-JsonKeys $cacheRegistryFile | Select-String -Pattern ".*$pattern.*" | % { $_.Matches } | ForEach { (" " * 2) + $_ } | Sort
             }
 
             { @("ls", "list") -contains $_ } {
                 # List register keys
-                ValidateCount-Arguments $args 2
+                Assert-ArgumentCount $args 2
                 Write-Host "Available Distributions (installable):" -ForegroundColor Yellow
-                JSON-Keys $cacheRegistryFile | ForEach {(" "*2) + $_} | Sort
+                Get-JsonKeys $cacheRegistryFile | ForEach { (" " * 2) + $_ } | Sort
             }
 
             Default {
@@ -924,72 +928,72 @@ switch ($command) {
     # -- Wsl backup management commands ---------------------------------------
 
     backup {
-        ValidateCount-Arguments $args 2 4
+        Assert-ArgumentCount $args 2 4
         $subCommand = $args[1]
 
         switch ($subCommand) {
             create {
                 # Backup a existing wsl instance
-                ValidateCount-Arguments $args 3 4
+                Assert-ArgumentCount $args 3 4
                 $wslName = $args[2]
-                if ($args.count -eq 3){ $backupAnnotation = "" }
+                if ($args.count -eq 3) { $backupAnnotation = "" }
                 else { $backupAnnotation = $args[3] }
 
                 Write-Host "* Backup '$wslName'"
-                if (-Not (Wsl-Backup $wslName $backupAnnotation)) { exit 1 }
+                if (-Not (Backup-Wsl $wslName $backupAnnotation)) { exit 1 }
                 Write-Host "* Backup complete"
             }
 
             restore {
                 # Restore a previously backuped wsl instance
-                ValidateCount-Arguments $args 3 4
+                Assert-ArgumentCount $args 3 4
                 $backupName = $args[2]
                 $forced = $false
-                if ($args.count -eq 4){
-                    if ($args[3] -ne "--force"){
+                if ($args.count -eq 4) {
+                    if ($args[3] -ne "--force") {
                         Write-Host 'Error: invalid parameter' -ForegroundColor Red
                         exit 1
                     }
                     $forced = $true
                 }
                 Write-Host "* Restore '$backupName'"
-                if (-Not (Wsl-Restore $backupName $forced)) { exit 1 }
+                if (-Not (Restore-Wsl $backupName $forced)) { exit 1 }
                 Write-Host "* Restore complete"
             }
 
             purge {
                 # Remove the backup directory
-                ValidateCount-Arguments $args 2
+                Assert-ArgumentCount $args 2
                 Remove-Item -LiteralPath $backupLocation -Force -Recurse -ErrorAction Ignore | Out-Null
                 Write-Host "* Backup storage cleared"
             }
 
             { @("rm", "remove") -contains $_ } { 
                 # Remove a backup by name
-                ValidateCount-Arguments $args 3
+                Assert-ArgumentCount $args 3
                 $backupName = $args[2]
 
-                $backupProperties = JSON-GetKey $backupRegistryFile $backupName
-                if ($null -eq $backupProperties){
+                $backupProperties = Get-JsonKeyValue $backupRegistryFile $backupName
+                if ($null -eq $backupProperties) {
                     Write-Host "Error: Backup '$backupName' does not exists" -ForegroundColor Red
                     return $false
                 }
                 $backupTgz = $backupProperties.archive
                 $backupTgzFile = "$backupLocation/$backupTgz"
-                if (Test-Path -Path $backupTgzFile){
+                if (Test-Path -Path $backupTgzFile) {
                     Write-Host "Delete Archive $backupTgz..."
                     Remove-Item -Path $backupTgzFile -Force -ErrorAction Ignore | Out-Null
                 }
                 Write-Host "Delete backup registry entry..."
-                JSON-RemoveKey $backupRegistryFile $backupName
+                Remove-JsonKey $backupRegistryFile $backupName
                 Write-Host "* Backup '$backupName' removed"
             }
             
             { @("ls", "list") -contains $_ } {
                 # List backup resister keys
-                ValidateCount-Arguments $args 2
+                Assert-ArgumentCount $args 2
                 Write-Host "Available Backups (recoverable):" -ForegroundColor Yellow
-                $backupArray = JSON-GetContentTo-Hashtable $backupRegistryFile
+                $backupArray = Convert-JsonToHashtable $backupRegistryFile
                 $backupArray.keys | ForEach { "  {0}`t`t - {1}" -f $_, $backupArray.$_.message }
             }
             

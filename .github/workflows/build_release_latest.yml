@@ -36,7 +36,7 @@ jobs:
 
       - name: Invoke PSScriptAnalyzer & Pester Tests
         shell: pwsh
-        run: pwsh -command "Invoke-Build -File ./.build.ps1 -Configuration 'Test' -ciMode:$true"
+        run: pwsh -command "Invoke-Build -File ./.build.ps1 -Configuration 'Test' -ciMode:$True"
 
 
   windows-build:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Building win32
         shell: powershell
-        run: powershell -command "Invoke-Build -File ./.build.ps1 -Configuration 'Release' -ciMode:$true"
+        run: powershell -command "Invoke-Build -File ./.build.ps1 -Configuration 'Release' -ciMode:$True"
 
       - uses: actions/upload-artifact@v2
         with:

@@ -5,6 +5,8 @@ on:
     branch:
       - master
   pull_request:
+  # Enables the possibility to trigger the workflow manually
+  workflow_dispatch:
 
 jobs:
 

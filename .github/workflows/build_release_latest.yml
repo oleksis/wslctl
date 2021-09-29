@@ -20,7 +20,7 @@ jobs:
         id: psmodulecache
         uses: potatoqualitee/psmodulecache@v3.5
         with:
-          modules-to-cache: Coveralls, Pester, PSScriptAnalyzer, InvokeBuild
+          modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild
           shell: pwsh
       
         # Setting up the powershell module cache
@@ -54,7 +54,7 @@ jobs:
         id: psmodulecache
         uses: potatoqualitee/psmodulecache@v3.5
         with:
-          modules-to-cache: Coveralls, Pester, PSScriptAnalyzer, InvokeBuild ,Ps2exe
+          modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild ,Ps2exe
           shell: pwsh
       
         # Setting up the powershell module cache

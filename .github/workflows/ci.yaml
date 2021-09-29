@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  # Only trigger the workflow if there is a pull request to the main branch
+  # or push to amaster
+  push:
+    branch:
+      - master
+  pull_request:
+
+  # Enables the possibility to trigger the workflow manually
+  workflow_dispatch: 
+
+  
+jobs:
+  # Building and tests
+  build_test:
+    runs-on: windows-latest
+
+    steps:
+
+        # Checkout the main branch
+      - uses: actions/checkout@v2
+        
+        # Setting up required powershell modules
+      - name: Set required PowerShell modules
+        id: psmodulecache
+        uses: potatoqualitee/psmodulecache@v3.5
+        with:
+          modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild, platyPS, ps2exe
+          shell: powershell
+      
+        # Setting up the powershell module cache
+      - name: Setup PowerShell module cache
+        id: cacher
+        uses: actions/cache@v2
+        with:
+            path: ${{ steps.psmodulecache.outputs.modulepath }}
+            key: ${{ steps.psmodulecache.outputs.keygen }}
+        
+        # Installing the required powershell module, if not cached
+      - name: Install required PowerShell modules
+        if: steps.cacher.outputs.cache-hit != 'true'
+        uses: potatoqualitee/psmodulecache@v3.5
+        with:
+          shell: powershell
+        
+        # Running the InvokeBuild Module Invoke-Build command with "Release configuration"
+      - name: Invoke Build
+        shell: powershell
+        run: powershell -command "Invoke-Build -File ./build.ps1 -Configuration 'Release'"
+        
+        
+        # Pushing the changes from InvokeBuild to the main branch
+      - name: Push changes to Git Repository
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -am "Pushing Artifacts"
+          git push
+        
+        # Uploads the build powershell exe file as an artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: app-artifact # Naming the powershell exe file artifact
+          path: ./build/ # Saving the powershell module artifact to the path ./build/

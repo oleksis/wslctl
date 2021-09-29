@@ -54,7 +54,7 @@ jobs:
         uses: potatoqualitee/psmodulecache@v3.5
         with:
           modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild ,Ps2exe
-          shell: pwsh
+          shell: powershell
       
         # Setting up the powershell module cache
       - name: Setup PowerShell module cache
@@ -69,7 +69,7 @@ jobs:
         if: steps.cacher.outputs.cache-hit != 'true'
         uses: potatoqualitee/psmodulecache@v3.5
         with:
-          shell: pwsh
+          shell: powershell
 
       - name: Building Application
         shell: powershell

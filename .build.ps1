@@ -1,7 +1,7 @@
 #Requires -Modules 'InvokeBuild'
 
 param (
-    [ValidateSet("Release", "Test")]$Configuration = "Test",
+    [ValidateSet("Release", "Test","all")]$Configuration = "Test",
     [Parameter(Mandatory = $false)][Switch]$ciMode = $false
 )
 
@@ -11,7 +11,8 @@ $Settings = @{
     AppName = "wslctl"
     BuildOutput = "$PSScriptRoot\build"
     DistFolder = "$PSScriptRoot\build\dist"
-    Dependency = @('Pester','PsScriptAnalyzer','Ps2exe','InvokeBuild')
+    TestDependency = @('Pester','PsScriptAnalyzer','InvokeBuild')
+    BuildDependency = @('Ps2exe','InvokeBuild')
     SourceFolder = "$PSScriptRoot\src"
 
     UnitTestParams = @{
@@ -54,8 +55,13 @@ task Clean {
 }
 
 task Install_Dependencies {
-    Foreach ( $Depend in $Settings.Dependency ) {
-        "Installing build dependency : $Depend"
+    switch ($Configuration) {
+        Tests { $Dependencies = $Settings.TestDependency }
+        Release { $Dependencies = $Settings.BuildDependency }
+        all { $Dependencies = ($Settings.TestDependency + $Settings.BuildDependency) | Select-Object -Unique }
+    }
+    Foreach ( $Depend in $Dependencies ) {
+        "Installing test dependency : $Depend"
         if ( $Depend -eq 'Selenium.WebDriver' ) {
             Install-Package $Depend -Source nuget.org -Force
         }
@@ -101,7 +107,7 @@ task Fail_If_Failed_Integration_Test {
 task Test Unit_Tests,
     Fail_If_Failed_Unit_Test,
     Integration_Tests,
-    Fail_If_Failed_Integration_Test
+    Fail_If_Failed_Integration_Test -if({ @("Tests", "all") -contains $Configuration})
 
 
 task Analyze_Code {
@@ -120,7 +126,7 @@ task Fail_If_Analyze_Findings {
 }
 
 task Analyze Analyze_Code,
-    Fail_If_Analyze_Findings
+    Fail_If_Analyze_Findings -if({ @("Tests", "all") -contains $Configuration})
 
 
 
@@ -196,7 +202,7 @@ task Build Build_Initialize,
     Build_App_x32,
     Build_App_x64,
     Build_Archive_x32,
-    Build_Archive_x64 -if($Configuration -eq "Release")
+    Build_Archive_x64 -if({ @("Release", "all") -contains $Configuration})
 
 
 task . Clean,

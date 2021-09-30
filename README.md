@@ -8,6 +8,7 @@ wsl wrapper and cache manager
 In order to ba able to call build.ps1 tasks, you need to import `InvokeBuild` powershell module:
 ```Powershell
 Install-Module -name InvokeBuild -Scope CurrentUser
+Invoke-Build -File ./.build.ps1 -Configuration 'Test' 
 ```
 
 #### Create a release

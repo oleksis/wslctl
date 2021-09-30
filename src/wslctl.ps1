@@ -734,6 +734,12 @@ function Restore-Wsl {
 ##
 ###############################################################################
 
+# Patch ps2exe to keep un*x like syntax (issue #1)
+# Warning: flag option only with one minus will be converted with 2 minus
+if ( ($args | Where { $_ -is [bool] }) ) {
+    $args = $args | Where {$_ -is [String]}                                 # Filter non string arguments
+    $args = $args | ForEach-Object { $_ -replace "^-([^-].*)", "--`${1}" }  # Change -option to --option
+    }
 
 $command = $args[0]
 if ($null -eq $command -or [string]::IsNullOrEmpty($command.Trim())) {
@@ -759,8 +765,8 @@ switch ($command) {
         $null, $args = $args
         foreach ($element in $args) {
             switch ($element) {
-                { @("-no-user", "--no-user") -contains $_ } { $createUser = $false }
-                { @("-v1", "--v1") -contains $_ } { $wslVersion = 1 }
+                --no-user { $createUser = $false }
+                --v1      { $wslVersion = 1 }
                 Default {
                     if ( $null -eq $wslName ) { $wslName = $element }
                     elseif ( $null -eq $distroName ) { $distroName = $element }
@@ -950,7 +956,7 @@ switch ($command) {
                 $backupName = $args[2]
                 $forced = $false
                 if ($args.count -eq 4) {
-                    if (-Not( @("-force", "--force") -contains $args[3] )) {
+                    if ($args[3] -ne "--force") {
                         Write-Host 'Error: invalid parameter' -ForegroundColor Red
                         exit 1
                     }
@@ -1007,9 +1013,9 @@ switch ($command) {
 
     # -- Others commands ------------------------------------------------------
 
-    { @("--version", "-version", "version") -contains $_ } { Write-Host "$version" }
+    { @("--version", "version") -contains $_ } { Write-Host "$version" }
 
-    { @("--help", "-help", "help") -contains $_ } { Show-Help }
+    { @("--help", "help") -contains $_ } { Show-Help }
 
 
     # -- Undefined commands ---------------------------------------------------

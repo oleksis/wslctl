@@ -13,7 +13,7 @@
 ###############################################################################
 
 
-$version = "1.0.0"
+$version = "1.0.1"
 $username = "$env:UserName"
 $wsl = 'c:\windows\system32\wsl.exe'
 
@@ -759,8 +759,8 @@ switch ($command) {
         $null, $args = $args
         foreach ($element in $args) {
             switch ($element) {
-                --no-user { $createUser = $false }
-                --v1 { $wslVersion = 1 }
+                { @("-no-user", "--no-user") -contains $_ } { $createUser = $false }
+                { @("-v1", "--v1") -contains $_ } { $wslVersion = 1 }
                 Default {
                     if ( $null -eq $wslName ) { $wslName = $element }
                     elseif ( $null -eq $distroName ) { $distroName = $element }
@@ -950,7 +950,7 @@ switch ($command) {
                 $backupName = $args[2]
                 $forced = $false
                 if ($args.count -eq 4) {
-                    if ($args[3] -ne "--force") {
+                    if (-Not( @("-force", "--force") -contains $args[3] )) {
                         Write-Host 'Error: invalid parameter' -ForegroundColor Red
                         exit 1
                     }
@@ -1007,9 +1007,9 @@ switch ($command) {
 
     # -- Others commands ------------------------------------------------------
 
-    { @("--version", "version") -contains $_ } { Write-Host "$version" }
+    { @("--version", "-version", "version") -contains $_ } { Write-Host "$version" }
 
-    { @("--help", "help") -contains $_ } { Show-Help }
+    { @("--help", "-help", "help") -contains $_ } { Show-Help }
 
 
     # -- Undefined commands ---------------------------------------------------

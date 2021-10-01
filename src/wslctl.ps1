@@ -739,7 +739,8 @@ function Restore-Wsl {
 if ( ($args | Where { $_ -is [bool] }) ) {
     $args = $args | Where {$_ -is [String]}                                 # Filter non string arguments
     $args = $args | ForEach-Object { $_ -replace "^-([^-].*)", "--`${1}" }  # Change -option to --option
-    }
+    if ($args -is [string]) { $args = @( "$args" ) }                        # Assert args is array
+}
 
 $command = $args[0]
 if ($null -eq $command -or [string]::IsNullOrEmpty($command.Trim())) {

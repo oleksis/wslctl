@@ -18,7 +18,7 @@
 ###############################################################################
 
 
-$version = "1.0.2"
+$version = "1.0.3"
 $username = "$env:UserName"
 $wsl = 'c:\windows\system32\wsl.exe'
 
@@ -50,8 +50,7 @@ function Show-Help {
     Write-Host "Wsl managment commands:"  -ForegroundColor Yellow
     Write-Color -Text "   create  <wsl_name> [<distro_name>] [--v1] ", "Create a named wsl instance from distribution" -Color Green, White
     Write-Color -Text "   rm      <wsl_name>                        ", "Remove a wsl instance by name" -Color Green, White
-    Write-Color -Text "   sh      <wsl_name>                        ", "Start a shell console on wsl instance by names" -Color Green, White
-    Write-Color -Text "   exec    <wsl_name> <script.sh>            ", "Execute specified script on wsl instance by names" -Color Green, White
+    Write-Color -Text "   exec    <wsl_name> [|<file.sh>|<cmd>]     ", "Execute specified script|cmd on wsl instance by names" -Color Green, White
     Write-Color -Text "   ls                                        ", "List all created wsl instance names" -Color Green, White
     Write-Color -Text "   start   <wsl_name>                        ", "Start an instance by name" -Color Green, White
     Write-Color -Text "   stop    <wsl_name>                        ", "Stop an instance by name" -Color Green, White
@@ -847,49 +846,57 @@ switch ($command) {
             Get-WslInstanceStatus $wslName
         }
     }
-    sh {
-        Assert-ArgumentCount $args 2
-        $wslName = $args[1]
-        # Check wslname instance already exists
-        if (-Not (Test-WslInstanceIsCreated $wslName)) {
-            Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
-            exit 1
-        }
-        & $wsl --distribution $wslName
-    }
     exec {
-        Assert-ArgumentCount $args 3
-        $wslName = $args[1]
-        $script = $args[2]
+        # exec <instance> [|<file.sh>|<remote_cmd_with_args>]
+        Assert-ArgumentCount $args 2 50
 
+        ($null, [string]$wslName, [array]$commandline) = $args
+        if ($null -eq $commandline ) { $commandline=@() }
+
+        
         # Check wslname instance already exists
         if (-Not (Test-WslInstanceIsCreated $wslName)) {
             Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
             exit 1
         }
 
-        # Check script extension
-        if (-Not ([IO.Path]::GetExtension($script) -eq '.sh')) {
-            Write-Host "Error: script has to be a shell file (.sh)" -ForegroundColor Red
-            exit 1
-        }
-        # Resolv windows full path to the script
-        try { $winScriptFullPath = Resolve-Path -Path $script -ErrorAction Stop }
-        catch {
-            Write-Host "Error: script path not found" -ForegroundColor Red
-            exit 1
-        }
-        $scriptInWslPath = ConvertTo-WslPath $winScriptFullPath
-        $scriptNoPath = Split-Path $script -leaf
-        $scriptTmpFile = "/tmp/$scriptNoPath"
+        if (-not($commandline)){
+            # No commands: connect to distribution
+            Write-Host "Connect to $wslName ..." -ForegroundColor Yellow
+            & $wsl --distribution $wslName
+            exit $LastExitCode
+        } 
 
-        # Copy script file to instance
-        Write-Host "Execute $scriptNoPath on $wslName ..." -ForegroundColor Yellow
-        # pass Original path to the script
-        & $wsl --distribution $wslName --exec cp $scriptInWslPath $scriptTmpFile
-        & $wsl --distribution $wslName --exec chmod +x $scriptTmpFile
-        & $wsl --distribution $wslName --exec SCRIPT_WINPATH=$scriptInWslPath $scriptTmpFile "$scriptInWslPath"
-        & $wsl --distribution $wslName --exec rm $scriptTmpFile
+        # Command passed 
+        # Check local script:Resolv windows full path to the script
+        try { $winScriptFullPath = Resolve-Path -Path $commandline[0] -ErrorAction Stop }
+        catch {}
+        
+        if ($winScriptFullPath){
+
+            # Check script extension
+            if (-Not ([IO.Path]::GetExtension($winScriptFullPath) -eq '.sh')) {
+                Write-Host "Error: script has to be a shell file (.sh)" -ForegroundColor Red
+                exit 1
+            }
+            ([string]$script, [array]$scriptArgs) = $commandline
+            $scriptInWslPath = ConvertTo-WslPath $winScriptFullPath
+            $scriptNoPath = Split-Path $script -leaf
+            $scriptTmpFile = "/tmp/$scriptNoPath"
+            # Copy script file to instance and pass original script path in SCRIPT_WINPATH env variable
+            # Call remote script with args
+            Write-Host "Execute $scriptNoPath on $wslName ..." -ForegroundColor Yellow
+            & $wsl --distribution $wslName --exec /usr/bin/cp $scriptInWslPath $scriptTmpFile
+            & $wsl --distribution $wslName --exec /usr/bin/chmod +x $scriptTmpFile
+            & $wsl --distribution $wslName -- SCRIPT_WINPATH=$scriptInWslPath $scriptTmpFile $scriptArgs
+            $exitCode = $LastExitCode
+            & $wsl --distribution $wslName --exec /usr/bin/rm $scriptTmpFile
+            exit $exitCode
+        } 
+        # Standard command to send 
+        Write-Host "Execute command '$commandline' on $wslName ..." -ForegroundColor Yellow
+        & $wsl --distribution $wslName -- SCRIPT_WINPATH= $commandline
+        exit $LastExitCode
     }
 
     halt {

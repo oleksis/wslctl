@@ -47,6 +47,7 @@ function Show-Help {
     Write-Color -Text "   create  <wsl_name> [<distro_name>] [--v1] ", "Create a named wsl instance from distribution" -Color Green, White
     Write-Color -Text "   rm      <wsl_name>                        ", "Remove a wsl instance by name" -Color Green, White
     Write-Color -Text "   sh      <wsl_name>                        ", "Start a shell console on wsl instance by names" -Color Green, White
+    Write-Color -Text "   exec    <wsl_name> <script.sh>            ", "Execute specified script on wsl instance by names" -Color Green, White
     Write-Color -Text "   ls                                        ", "List all created wsl instance names" -Color Green, White
     Write-Color -Text "   start   <wsl_name>                        ", "Start an instance by name" -Color Green, White
     Write-Color -Text "   stop    <wsl_name>                        ", "Stop an instance by name" -Color Green, White

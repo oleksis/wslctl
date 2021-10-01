@@ -46,6 +46,7 @@ function Show-Help {
     Write-Host "Wsl managment commands:"  -ForegroundColor Yellow
     Write-Color -Text "   create  <wsl_name> [<distro_name>] [--v1] ", "Create a named wsl instance from distribution" -Color Green, White
     Write-Color -Text "   rm      <wsl_name>                        ", "Remove a wsl instance by name" -Color Green, White
+    Write-Color -Text "   sh      <wsl_name>                        ", "Start a shell console on wsl instance by names" -Color Green, White
     Write-Color -Text "   ls                                        ", "List all created wsl instance names" -Color Green, White
     Write-Color -Text "   start   <wsl_name>                        ", "Start an instance by name" -Color Green, White
     Write-Color -Text "   stop    <wsl_name>                        ", "Stop an instance by name" -Color Green, White
@@ -841,7 +842,16 @@ switch ($command) {
             Get-WslInstanceStatus $wslName
         }
     }
-
+    sh {
+        Assert-ArgumentCount $args 2
+        $wslName = $args[1]
+        # Check wslname instance already exists
+        if (-Not (Test-WslInstanceIsCreated $wslName)) {
+            Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
+            exit 1
+        }
+        & $wsl --distribution $wslName
+    }
     exec {
         Assert-ArgumentCount $args 3
         $wslName = $args[1]

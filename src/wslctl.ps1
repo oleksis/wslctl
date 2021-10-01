@@ -10,6 +10,11 @@
 #    > Install-Module -Name ps2exe -Scope CurrentUser
 #    > ps2exe wslctl.ps1
 #
+#
+# Note: WSL2 is available from windows 10 release id 2009+ (build 19041+)
+# to check:
+#   (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId => 2009
+#   Get-CimInstance Win32_OperatingSystem | Select -ExpandProperty buildnumber => 19041+
 ###############################################################################
 
 
@@ -32,7 +37,6 @@ $cacheRegistryFile = "$cacheLocation/register.json"    # Local copy of reistry e
 $backupRegistryFile = "$backupLocation/register.json"  # Local backup register
 
 
-
 ## ----------------------------------------------------------------------------
 ## Display Help informations
 ## ----------------------------------------------------------------------------
@@ -40,7 +44,7 @@ function Show-Help {
     Write-Host
     Write-Host  "Usage:" -ForegroundColor Yellow
     Write-Host "   wslctl COMMAND [ARG...]"
-    Write-Host "   wslctl [ --help | --version ]"
+    Write-Host "   wslctl [ --help | --version | --wsl-default-version [version_to_set]]"
     Write-Host
     # Wsl management
     Write-Host "Wsl managment commands:"  -ForegroundColor Yellow
@@ -943,6 +947,7 @@ switch ($command) {
         }
     }
 
+
     # -- Wsl backup management commands ---------------------------------------
 
     backup {
@@ -1029,6 +1034,18 @@ switch ($command) {
 
     { @("--help", "help") -contains $_ } { Show-Help }
 
+    { @("--wsl-default-version", "wsl-default-version") -contains $_ } {
+        Assert-ArgumentCount $args 1 2
+        if ($args.count -eq 1) {
+            # Get the default wsl version
+            Get-ItemPropertyValue -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss -Name DefaultVersion
+        }
+        else {
+            # List status for specific wsl instance
+            $wslDefaultVersion = $args[1]
+            & $wsl --set-default-version $wslDefaultVersion
+        }
+    }
 
     # -- Undefined commands ---------------------------------------------------
     Default {

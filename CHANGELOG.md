@@ -3,4 +3,5 @@
 * fix: [System.Char] do not contains  « Trim » named method
 * add exec method  on help message
 * add sh method
+* add --wsl-default-version command
 * Prepare v1.0.2

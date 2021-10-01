@@ -18,7 +18,7 @@
 ###############################################################################
 
 
-$version = "1.0.3"
+$version = "1.0.4"
 $username = "$env:UserName"
 $wsl = 'c:\windows\system32\wsl.exe'
 
@@ -548,6 +548,7 @@ function Initialize-WslInstanceDefaultUser {
     & $wsl --distribution $wslName --exec /usr/sbin/addgroup --gid 1000 $username
     & $wsl --distribution $wslName --exec /usr/sbin/adduser --quiet --disabled-password --gecos `` --uid 1000 --gid 1000 $username
     & $wsl --distribution $wslName --exec /usr/sbin/usermod -aG sudo $username
+    & $wsl --distribution $wslName --% /usr/sbin/usermod --password $(/usr/bin/openssl passwd -crypt ChangeMe) $(/usr/bin/id -nu 1000)
     & $wsl --distribution $wslName --% /usr/bin/printf '\n[user]\ndefault=%s\n' $(/usr/bin/id -nu 1000) >> /etc/wsl.conf
     & $wsl --terminate $wslName
     return $true;

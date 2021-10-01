@@ -1,7 +1,9 @@
 # wslctl
+
 wsl wrapper and cache manager 
-
-
+When creating a new wsl instance, the defaut user has the same name as the windows session, 
+and the default password is `ChangeMe` (to be changed after initialization with command `passwd`).
+That user is in the `sudo` system group.
 
 ## Development
 

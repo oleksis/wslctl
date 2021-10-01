@@ -175,7 +175,9 @@ task Build_Archive_x32 {
     $BuildParams = $Settings.BuildParams.win32
     Write-Output "Compress Release File $($BuildParams.BinaryFile)"
     $compress = @{
-        Path             = $BuildParams.BinaryFile
+        # waiting for issue#2 resolution
+        #Path             = $BuildParams.BinaryFile
+        Path             = $BuildParams.SourceFile
         CompressionLevel = "Fastest"
         DestinationPath  = $BuildParams.ArchiveFile
     }
@@ -188,7 +190,9 @@ task Build_Archive_x64 {
     $BuildParams = $Settings.BuildParams.win64
     Write-Output "Compress Release File $($BuildParams.BinaryFile)"
     $compress = @{
-        Path             = $BuildParams.BinaryFile
+        # waiting for issue#2 resolution
+        #Path             = $BuildParams.BinaryFile
+        Path             = $BuildParams.SourceFile
         CompressionLevel = "Fastest"
         DestinationPath  = $BuildParams.ArchiveFile
     }

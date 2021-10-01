@@ -19,3 +19,7 @@ Invoke-Build -File ./.build.ps1 -Configuration 'Test'
 1. Run `$Version=(cmd /c powershell.exe .\src\wslctl.ps1 --version)` to retreive the binary version.
 1. Create the tag with `git tag $Version`.
 1. Push to upstream: `git push --tags origin master`.
+
+## NOTE
+Not be able to starts interactive bash with sage of Ps2exe ... 
+So deliver ps1 script file only.. 

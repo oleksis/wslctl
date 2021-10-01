@@ -505,13 +505,13 @@ function Get-WslInstancesWithStatus {
 ## Get wsl instance status
 ## ----------------------------------------------------------------------------
 function Get-WslInstanceStatus {
-    [OutputType('string')]
+    #[OutputType('string')]
     Param( [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$wslName )
     if (-Not (Test-WslInstanceIsCreated $wslName)) {
         return "* $wslName is not a wsl instance"
     }
     else {
-        return (& $wsl --list --verbose | Select-String -Pattern " +$wslName +" | Out-String).Trim() | ForEach-Object { (" " * 2) + $_ }
+        return ((Get-WslInstancesWithStatus | Select-String -Pattern " +$wslName +" | Out-String).Trim() -Split '[\*\s]+'  | Where-Object {$_})[1]
     }
 }
 

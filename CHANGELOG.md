@@ -1,2 +1,2 @@
-* Add created default password
-* Prepare v1.0.4
+* update ReadMe.md with usage
+* Prepare v1.0.5

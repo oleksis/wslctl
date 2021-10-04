@@ -25,7 +25,6 @@ $wsl = 'c:\windows\system32\wsl.exe'
 # Registry Properties
 $endpoint = '\\qu1-srsrns-share.seres.lan\delivery\wsl\images'
 $registryEndpoint = "$endpoint\register.json"
-$registryEndpoint = "$PSScriptRoot\register.json" # TODO: remove
 
 # Local Properties
 $installLocation = "$env:LOCALAPPDATA/Wslctl"      # Installation User Directory

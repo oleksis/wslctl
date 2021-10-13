@@ -36,6 +36,8 @@ $cacheRegistryFile = "$cacheLocation/register.json"    # Local copy of reistry e
 $backupRegistryFile = "$backupLocation/register.json"  # Local backup register
 
 
+
+
 ## ----------------------------------------------------------------------------
 ## Display Help informations
 ## ----------------------------------------------------------------------------
@@ -67,9 +69,10 @@ function Show-Help {
 
     # Wsl backup management
     Write-Host "Wsl backup managment commands:"  -ForegroundColor Yellow
-    Write-Color -Text "   backup create  <wsl_name> [<message>]     ", "Create a new backup for the specified wsl instance" -Color Green, White
+    Write-Color -Text "   backup create  <wsl_name> <message>       ", "Create a new backup for the specified wsl instance" -Color Green, White
     Write-Color -Text "   backup rm      <backup_name>              ", "Remove a backup by name" -Color Green, White
     Write-Color -Text "   backup restore <backup_name> [--force]    ", "Restore a wsl instance from backup" -Color Green, White
+    Write-Color -Text "   backup search  <backup_pattern>           ", "Find a created backup with input as pattern" -Color Green, White
     Write-Color -Text "   backup ls                                 ", "List all created backups" -Color Green, White
     Write-Color -Text "   backup purge                              ", "Remove all created backups" -Color Green, White
     Write-Host
@@ -100,6 +103,18 @@ function Install-WorkingEnvironment {
 ##
 ###############################################################################
 
+## ----------------------------------------------------------------------------
+## Get Human readable File Size
+## ----------------------------------------------------------------------------
+function Format-FileSize() {
+    param ([int64]$size)
+    if     ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
+    elseif ($size -gt 1GB) {[string]::Format("{0:0.00} GB", $size / 1GB)}
+    elseif ($size -gt 1MB) {[string]::Format("{0:0.00} MB", $size / 1MB)}
+    elseif ($size -gt 1KB) {[string]::Format("{0:0.00} kB", $size / 1KB)}
+    elseif ($size -gt 0)   {[string]::Format("{0:0.00} B", $size)}
+    else                   {""}
+}
 
 ## ----------------------------------------------------------------------------
 ## Write-Host with multicolor on same line
@@ -583,12 +598,14 @@ function Import-Wsl {
         }
     }
     # Get distroname definition
-    $distroPackage = Get-JsonKeyValue $cacheRegistryFile $distroName
-    if ($null -eq $distroPackage) {
+    $distroProperties = Get-JsonKeyValue $cacheRegistryFile $distroName
+    if ($null -eq $distroProperties) {
         Write-Host "Error: Distribution '$distroName' not found in registry" -ForegroundColor Red
         Write-Host "  - Please use the 'update' command to refresh the registry."
         return $false
     }
+    $distroRealSha256 = $distroProperties.sha256
+    $distroPackage  = $distroProperties.archive
     $distroEndpoint = "$endpoint\$distroPackage"
     $distroLocation = "$cacheLocation\$distroPackage"
 
@@ -597,6 +614,15 @@ function Import-Wsl {
         Write-Host "Dowload distribution '$distroName' ..."
         if (-Not (Copy-File $distroEndpoint $distroLocation)) {
             Write-Host "Error: Registry endpoint not reachable" -ForegroundColor Red
+            return $false
+        }
+        # Check integrity
+        Write-Host "Checking integrity ($distroRealSha256)..." 
+        $distroLocationHash = (Get-FileHash $distroLocation -Algorithm SHA256).Hash.ToLower()
+        if (-Not ($distroLocationHash -eq $distroRealSha256)){
+            Write-Host "Error: Archive File integrity mismatch. Found '$distroLocationHash'" -ForegroundColor Red
+            Write-Host "       removing  $distroLocation" -ForegroundColor Red
+            Remove-Item -Path $distroLocation -Force -ErrorAction Ignore | Out-Null
             return $false
         }
     }
@@ -631,16 +657,33 @@ function Import-Wsl {
 function Backup-Wsl {
     [OutputType('bool')]
     Param( [string]$wslName, [string]$backupAnnotation)
-    $backupdate = Get-Date -format "yyyyMMdd_HHmmss"
-    $backupName = "$wslName-$backupdate"
-    $backupTar = "$backupName-amd64-wsl-rootfs.tar"
-    $backupTgz = "$backupTar.gz"
+    $backupdate = Get-Date -format "yyyy/MM/dd HH:mm:ss"
 
     # Check wslname instance already exists
     if (-Not (Test-WslInstanceIsCreated $wslName)) {
         Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
         return $false
     }
+
+    Write-Host "Compute backup name ..."
+    #$backupName = "$wslName-$backupdate"
+    # Read the next backup name for the specified wsl name instance
+    $backupPrePattern="$wslName-bkp"
+    $bkpNumber=0
+    Get-JsonKeys $backupRegistryFile | where {$_ -like "$backupPrePattern.*"} | foreach {
+        # remove wslname and backup string from key to get the number
+        $bkpPreviousNumber = [int]($_.Split('.')[-1])
+        if ($bkpPreviousNumber -ge $bkpNumber){
+            $bkpNumber = $bkpPreviousNumber + 1
+        }
+    }
+    $bkpNumberStr = '{0:d2}' -f $bkpNumber
+    $backupName = "$backupPrePattern.$bkpNumberStr"
+    Write-Host "Backup name is: $backupName"
+
+    $backupTar = "$backupName-amd64-wsl-rootfs.tar"
+    $backupTgz = "$backupTar.gz"
+
     # Stop if required
     if (Test-WslInstanceIsRunning $wslName) {
         Write-Host "Stop instance '$wslName'"
@@ -653,17 +696,21 @@ function Backup-Wsl {
     & $wsl --distribution $wslName --exec gzip $backupTar
     Write-Host "Compute Backup Hash..."
     $backupHash = (Get-FileHash $backupTgz -Algorithm SHA256).Hash.ToLower()
+    Write-Host "Compute File Size"
+    $backupSize = Format-FileSize((Get-Item $backupTgz).length)
     Write-Host "Move to backup directory..."
     Move-Item -Path $backupTgz -Destination "$backupLocation/$backupTgz" -Force
 
     # Finally append backup to the register
-    Set-JsonKeyValue $backupRegistryFile "$wslName-$backupdate" @{
+    Set-JsonKeyValue $backupRegistryFile "$backupName" @{
         wslname = $wslName
         message = $backupAnnotation
         archive = $backupTgz
         sha256  = $backupHash
+        size    = $backupSize
         date    = $backupdate
     }
+    Write-Host "$wslName backuped as $backupTgz (SHA256: $backupHash)"
     return $true
 }
 
@@ -952,7 +999,7 @@ switch ($command) {
                 Write-Host "Available distributions from pattern '$pattern':" -ForegroundColor Yellow
                 (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() | ForEach-Object { 
                     if ($_.Key -match ".*$pattern.*") {
-                        "{0,-28} - {1,1} - {2,1}" -f  $_.Key,$_.Value.date,$_.Value.message
+                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
                     }
                 } | Sort
             }
@@ -962,7 +1009,7 @@ switch ($command) {
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Distributions (installable):" -ForegroundColor Yellow
                 (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() |  ForEach-Object {
-                    "{0,-28} - {1,1} - {2,1}" -f  $_.Key,$_.Value.date,$_.Value.message
+                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
                 } | Sort
             }
 
@@ -983,13 +1030,12 @@ switch ($command) {
         switch ($subCommand) {
             create {
                 # Backup a existing wsl instance
-                Assert-ArgumentCount $args 3 4
+                Assert-ArgumentCount $args 4
                 $wslName = $args[2]
-                if ($args.count -eq 3) { $backupAnnotation = "" }
-                else { $backupAnnotation = $args[3] }
+                $backupAnnotation = $args[3]
 
                 Write-Host "* Backup '$wslName'"
-                if (-Not (Backup-Wsl $wslName $backupAnnotation)) { exit 1 }
+                if (-Not (Backup-Wsl $wslName "$backupAnnotation")) { exit 1 }
                 Write-Host "* Backup complete"
             }
 
@@ -1038,12 +1084,25 @@ switch ($command) {
                 Write-Host "* Backup '$backupName' removed"
             }
 
+            search {
+                # Search available backup by regexp
+                Assert-ArgumentCount $args 3
+                $pattern = $args[2]
+                Write-Host "Available backup from pattern '$pattern':" -ForegroundColor Yellow
+                (Convert-JsonToHashtable $backupRegistryFile).GetEnumerator() | ForEach-Object { 
+                    if ($_.Key -match ".*$pattern.*") {
+                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
+                    }
+                } | Sort
+            }
+
             { @("ls", "list") -contains $_ } {
                 # List backup resister keys
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Backups (recoverable):" -ForegroundColor Yellow
-                $backupArray = Convert-JsonToHashtable $backupRegistryFile
-                $backupArray.keys | ForEach-Object { "  {0}`t`t - {1}" -f $_, $backupArray.$_.message }
+                (Convert-JsonToHashtable $backupRegistryFile).GetEnumerator() |  ForEach-Object {
+                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
+                } | Sort
             }
 
             Default {

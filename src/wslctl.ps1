@@ -25,7 +25,6 @@ $wsl = 'c:\windows\system32\wsl.exe'
 # Registry Properties
 $endpoint = '\\qu1-srsrns-share.seres.lan\delivery\wsl\images'
 $registryEndpoint = "$endpoint\register.json"
-$registryEndpoint = "register.json"
 
 # Local Properties
 $installLocation = "$env:LOCALAPPDATA/Wslctl"      # Installation User Directory
@@ -35,7 +34,7 @@ $backupLocation = "$installLocation/Backups"    # Backups Location (Storage of d
 
 $cacheRegistryFile = "$cacheLocation/register.json"    # Local copy of reistry endpoint
 $backupRegistryFile = "$backupLocation/register.json"  # Local backup register
-$cacheRegistryFile = "register.json"
+
 
 ## ----------------------------------------------------------------------------
 ## Display Help informations

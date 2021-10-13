@@ -18,7 +18,7 @@
 ###############################################################################
 
 
-$version = "1.0.4"
+$version = "1.0.5"
 $username = "$env:UserName"
 $wsl = 'c:\windows\system32\wsl.exe'
 
@@ -33,7 +33,7 @@ $cacheLocation = "$installLocation/Cache"       # Cache Location (Storage of dis
 $backupLocation = "$installLocation/Backups"    # Backups Location (Storage of distribution packages)
 
 $cacheRegistryFile = "$cacheLocation/register.json"    # Local copy of reistry endpoint
-$backupRegistryFile = "$backupLocation/register.json"  # Local backup register
+$backupRegistryFile = "$backupLocation/backups.json"  # Local backup register
 
 
 

@@ -623,6 +623,8 @@ function Import-Wsl {
 ###############################################################################
 
 
+
+
 ## ----------------------------------------------------------------------------
 ## Backup wsl instance
 ## ----------------------------------------------------------------------------
@@ -649,6 +651,8 @@ function Backup-Wsl {
     & $wsl --export $wslName $backupTar
     Write-Host "Compress $backupTar to $backupTgz..."
     & $wsl --distribution $wslName --exec gzip $backupTar
+    Write-Host "Compute Backup Hash..."
+    $backupHash = (Get-FileHash $backupTgz -Algorithm SHA256).Hash
     Write-Host "Move to backup directory..."
     Move-Item -Path $backupTgz -Destination "$backupLocation/$backupTgz" -Force
 
@@ -657,6 +661,7 @@ function Backup-Wsl {
         wslname = $wslName
         message = $backupAnnotation
         archive = $backupTgz
+        sha256  = $backupHash
         date    = $backupdate
     }
     return $true
@@ -678,11 +683,19 @@ function Restore-Wsl {
     }
     $wslName = $backupProperties.wslname
     $backupTgz = $backupProperties.archive
+    $backupHash = $backupProperties.sha256
 
     Write-Host "Check archive file..."
     $backupTgzLocation = "$backupLocation/$backupTgz"
     if (-Not (Test-Path -Path $backupTgzLocation)) {
         Write-Host "Error: File not found '$backupTgzLocation'" -ForegroundColor Red
+        return $false
+    }
+
+    Write-Host "Check archive integrity ($backupHash)..."
+    $archiveHash = (Get-FileHash $backupTgzLocation -Algorithm SHA256).Hash
+    if (-Not ($archiveHash -eq $backupHash)){
+        Write-Host "Error: Archive File integrity mismatch. Found '$archiveHash'" -ForegroundColor Red
         return $false
     }
 

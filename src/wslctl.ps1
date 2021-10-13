@@ -25,6 +25,7 @@ $wsl = 'c:\windows\system32\wsl.exe'
 # Registry Properties
 $endpoint = '\\qu1-srsrns-share.seres.lan\delivery\wsl\images'
 $registryEndpoint = "$endpoint\register.json"
+$registryEndpoint = "register.json"
 
 # Local Properties
 $installLocation = "$env:LOCALAPPDATA/Wslctl"      # Installation User Directory
@@ -34,7 +35,7 @@ $backupLocation = "$installLocation/Backups"    # Backups Location (Storage of d
 
 $cacheRegistryFile = "$cacheLocation/register.json"    # Local copy of reistry endpoint
 $backupRegistryFile = "$backupLocation/register.json"  # Local backup register
-
+$cacheRegistryFile = "register.json"
 
 ## ----------------------------------------------------------------------------
 ## Display Help informations
@@ -950,14 +951,20 @@ switch ($command) {
                 Assert-ArgumentCount $args 3
                 $pattern = $args[2]
                 Write-Host "Available distributions from pattern '$pattern':" -ForegroundColor Yellow
-                Get-JsonKeys $cacheRegistryFile | Select-String -Pattern ".*$pattern.*" | ForEach-Object { $_.Matches } | ForEach-Object { (" " * 2) + $_ } | Sort-Object
+                (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() | ForEach-Object { 
+                    if ($_.Key -match ".*$pattern.*") {
+                        "{0,-28} - {1,1} - {2,1}" -f  $_.Key,$_.Value.date,$_.Value.message
+                    }
+                } | Sort
             }
 
             { @("ls", "list") -contains $_ } {
                 # List register keys
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Distributions (installable):" -ForegroundColor Yellow
-                Get-JsonKeys $cacheRegistryFile | ForEach-Object { (" " * 2) + $_ } | Sort-Object
+                (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() |  ForEach-Object {
+                    "{0,-28} - {1,1} - {2,1}" -f  $_.Key,$_.Value.date,$_.Value.message
+                } | Sort
             }
 
             Default {

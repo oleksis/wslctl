@@ -886,11 +886,11 @@ switch ($command) {
             # Copy script file to instance and pass original script path in SCRIPT_WINPATH env variable
             # Call remote script with args
             Write-Host "Execute $scriptNoPath on $wslName ..." -ForegroundColor Yellow
-            & $wsl --distribution $wslName --exec /usr/bin/cp $scriptInWslPath $scriptTmpFile
-            & $wsl --distribution $wslName --exec /usr/bin/chmod +x $scriptTmpFile
+            & $wsl --distribution $wslName --exec cp $scriptInWslPath $scriptTmpFile
+            & $wsl --distribution $wslName --exec chmod +x $scriptTmpFile
             & $wsl --distribution $wslName -- SCRIPT_WINPATH=$scriptInWslPath $scriptTmpFile $scriptArgs
             $exitCode = $LastExitCode
-            & $wsl --distribution $wslName --exec /usr/bin/rm $scriptTmpFile
+            & $wsl --distribution $wslName --exec rm $scriptTmpFile
             exit $exitCode
         } 
         # Standard command to send 

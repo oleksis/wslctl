@@ -775,7 +775,7 @@ function Restore-Wsl {
     if (Test-Path -Path $wslNameLocation) {
         $directoryInfo = Get-ChildItem $wslNameLocation | Measure-Object
         if (-Not ($directoryInfo.count -eq 0)) {
-            write-host "Error: Directory $wslNameLocation already in use" -ForegroundColor Red
+            Write-Host "Error: Directory $wslNameLocation already in use" -ForegroundColor Red
             return $false
         }
     }
@@ -791,6 +791,98 @@ function Restore-Wsl {
 }
 
 
+
+###############################################################################
+##
+##                        BUILD FUNCTIONS
+##
+###############################################################################
+
+## ----------------------------------------------------------------------------
+# Normalize DockerFile Build style commands
+## ----------------------------------------------------------------------------
+function ConvertFrom-WSLFile {
+    [OutputType('array')]
+    Param( [string]$wslFile)
+
+    $instructions = "from user run add copy arg env expose cmd onbuild workdir entrypoint" -Split " "
+    
+    if (-Not (Test-Path -Path $wslFile)) {
+        Write-Host "Error: File not found '$wslFile'" -ForegroundColor Red
+        return @()
+    }
+
+    $commands=@()
+    Get-Content $wslFile | ForEach-Object {
+        # ignore blank and comment lines
+        if ($_ -match "^\s*$") { Return }
+        if ($_ -match "^\s*#") { Return }
+
+        $segments=$_ -Split " ",2
+        if ($segments.length -lt 2 -Or -Not ($instructions -contains $segments[0].ToLower())) { 
+            Write-Host "Warning: Unsupported command '$_' (ignored)" -ForegroundColor Yellow
+            Return
+        }
+
+        switch ($segments[0].ToLower()) {
+            { @("from user run add copy expose workdir" -Split " ") -contains $_ } {
+                $commands += @{ $segments[0] = $segments[1] }
+            }
+            { @("entrypoint", "cmd") -contains $_ } {
+                $commands += @{ $segments[0] = ($segments[1] | ConvertFrom-Json ) }
+            }
+            arg {
+                $commands_args = $segments[1] -Split "=",2
+                if ($commands_args.length -eq 2) { $commands += @{ "arg" = $commands_args } }
+            }
+            env {
+                if ($segments[1] -match "^[a-zA-Z_].[a-zA-Z0-9_]+?=(`"|')[^`"']*?\1$" ){
+                    $commands += @{ "env" = $segments[1] }
+                    Return
+                }
+                
+                $env_array = $segments[1] -Split " "
+                $env_pattern = "^[a-zA-Z_].[a-zA-Z0-9_]+?=.+$"
+                switch  ($env_array.length){
+                    1 {
+                        # env test=true
+                        $commands += @{ "env" = $segments[1] }
+                        Return
+                    }
+                    2 {
+                        # env test=true
+                        $invalid_members = $segments[1].Where({$_ -notmatch $env_pattern})
+                        if ($invalid_members.length -eq 0) {
+                            $commands += @{ "env" = $segments[1] }
+                            Return
+                        }
+                        # env test true
+                        $commands += @{ "env" = $env_array -Join  "=" }
+                    }
+                    Default {
+                        # env test true OR
+                        # env test=true key=value ... OR 
+                        # env test this is the string of the test env value
+                        $invalid_members = $env_array.Where({$_ -notmatch $env_pattern})
+                        if ($invalid_members.length -eq 0){
+                            # env test=true key=value ...
+                            $commands += @{ "env" = $segments[1] }
+                            Return
+                        } 
+                        # env test this is the string of the test env value
+                        # => env test="this is the string of the test env value"
+                        $env_key,$env_string=$env_array
+                        $commands += @{ "env" = (@($env_key, ('"'+( $env_string -Join " " )+'"')) -Join "=") }
+                    }
+                }
+            }
+        }
+    }
+    return $commands
+}
+
+ConvertFrom-WSLFile $args[0]
+exit
 
 
 ###############################################################################

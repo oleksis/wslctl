@@ -57,6 +57,7 @@ function Show-Help {
     Write-Color -Text "   stop    <wsl_name>                        ", "Stop an instance by name" -Color Green, White
     Write-Color -Text "   status [<wsl_name>]                       ", "List all or specified wsl Instance status" -Color Green, White
     Write-Color -Text "   halt                                      ", "Shutdown all wsl instances" -Color Green, White
+    Write-Color -Text "   build  [<Wslfile>] [--dry-run]            ", "Build an instance (docker like)" -Color Green, White
     Write-Host
 
     # wsl distributions registry management
@@ -799,21 +800,15 @@ function Restore-Wsl {
 ###############################################################################
 
 ## ----------------------------------------------------------------------------
-# Normalize DockerFile Build style commands
+# Normalize DockerFile Build style commands to hash array of commands
 ## ----------------------------------------------------------------------------
 function ConvertFrom-WSLFile {
     [OutputType('array')]
-    Param( [string]$wslFile)
-
-    $instructions = "from user run add copy arg env expose cmd onbuild workdir entrypoint" -Split " "
     
-    if (-Not (Test-Path -Path $wslFile)) {
-        Write-Host "Error: File not found '$wslFile'" -ForegroundColor Red
-        return @()
-    }
+    $instructions = "maintainer from user run add copy arg env expose cmd onbuild workdir entrypoint" -Split " "
 
     $commands=@()
-    Get-Content $wslFile | ForEach-Object {
+    @($Input) | ForEach-Object {
         # ignore blank and comment lines
         if ($_ -match "^\s*$") { Return }
         if ($_ -match "^\s*#") { Return }
@@ -824,8 +819,9 @@ function ConvertFrom-WSLFile {
             Return
         }
 
+        $segments[0] = $segments[0].ToLower()
         switch ($segments[0].ToLower()) {
-            { @("from user run add copy expose workdir" -Split " ") -contains $_ } {
+            { @("maintainer from user run add copy expose workdir" -Split " ") -contains $_ } {
                 $commands += @{ $segments[0] = $segments[1] }
             }
             { @("entrypoint", "cmd") -contains $_ } {
@@ -879,10 +875,44 @@ function ConvertFrom-WSLFile {
         }
     }
     return $commands
+
 }
 
-ConvertFrom-WSLFile $args[0]
-exit
+## ----------------------------------------------------------------------------
+# Hash array of Wslfile commands to bash interpretable array commands
+## ----------------------------------------------------------------------------
+function ConvertTo-WSLBashCommands {
+    [OutputType('string')]
+    param ( [string]$WorkingDirectory )
+    
+    $pwdInWsl =  ConvertTo-WslPath $WorkingDirectory
+    $bash=@(
+        "#!/usr/bin/env bash",
+        "# The script is generated from a Dockerfile via wslctl v$VERSION "
+        )
+    $bashEndOfHeader=@(
+        "`n# -- Automatic change working directory:",
+        "cd $pwdInWsl",
+        "`n# -- Converted commands:"
+        )
+
+    @($Input) | ForEach-Object {
+        $key=$_.keys[0]
+        $values = $_.values
+        switch ($key) {
+            "from" { $bash += "# The Original Wslfile is from image : $values" }
+            "maintainer" { $bash += "# Original Wslfile Maintainer: $values" }
+            "run"  { $bash += $bashEndOfHeader + "$values" ; $bashEndOfHeader=@() }
+            "arg"  { $bash += $bashEndOfHeader + $values -Join "=" ; $bashEndOfHeader=@() }
+            "env"  { $bash += $bashEndOfHeader + "export $values" + "echo 'export $values'>> ~/.bashrc" ; $bashEndOfHeader=@() }
+            "user" { $bash += $bashEndOfHeader + "su - $values" ; $bashEndOfHeader=@() }
+            "copy" { $bash += $bashEndOfHeader + "cp $values" ; $bashEndOfHeader=@() } 
+            Default { Write-Host "Warning: Unimplemented command '$_' (ignored)" -ForegroundColor Yellow }
+        }
+    }
+    $bash
+}
+
 
 
 ###############################################################################
@@ -998,6 +1028,60 @@ switch ($command) {
             Get-WslInstanceStatus $wslName
         }
     }
+
+    build {
+        # build [<Wslfile path>] [<--dry-run>]
+        Assert-ArgumentCount $args 1 3
+
+        $dryRun=$false
+        $wslFile = "./Wslfile" # Default file name in directory
+        for ($index = 1; $index -lt $args.length; $index++){
+            switch ($args[$index]){
+                --dry-run { $dryRun = $true }
+                Default   { $wslFile = $args[$index] }
+            }
+        }   
+        if (-Not (Test-Path $wslFile -PathType leaf)){
+            Write-Host "Error: Invalid parameter $wslFile not found" -ForegroundColor Red
+            exit 1
+        }
+        $wslFullPath = Resolve-Path -Path $wslFile -ErrorAction Stop
+        # target wsl distro is parent directory name
+        $wslFileDirectory = (get-item $wslFullPath).Directory
+        
+        
+        # Translate WSLfile to Bash commands
+        $normalizedCommandHash = Get-Content $wslFullPath | ConvertFrom-WSLFile
+        $fromDistroName = $normalizedCommandHash.from
+        $wslTargetDistroName = $wslFileDirectory.Name
+        if (-Not $fromDistroName){
+            Write-Host "Error: Invalid file: no FROM property found" -ForegroundColor Red
+            exit 1
+        }
+        $bashArray = $normalizedCommandHash | ConvertTo-WSLBashCommands -WorkingDirectory $wslFileDirectory
+        
+        if ($dryRun) { 
+            Write-Host "Base Distro name  : $fromDistroName" 
+            Write-Host "Target Distro name: $wslTargetDistroName" 
+            Write-Host 
+            Write-Host "--------------Generated Script File --------------------"
+            ($bashArray -Join "`n") 
+            Write-Host "--------------------------------------------------------"
+            exit
+        }
+        
+        # Create Temp file with proper extension and set its content
+        $tempBashWinFile = Get-ChildItem ([IO.Path]::GetTempFileName()) | `
+            Rename-Item -NewName { [IO.Path]::ChangeExtension($_, ".sh") } -PassThru
+        ($bashArray -Join "`n") | Set-Content $tempBashWinFile
+
+        # Create target distribution name and execute script file
+        self create $wslname $fromDistroName --no-user
+        self exec $wslname $tempBashWinFile
+        $exitCode = $LastExitCode
+        exit $exitCode
+    }
+
     exec {
         # exec <instance> [|<file.sh>|<remote_cmd_with_args>]
         Assert-ArgumentCount $args 2 50

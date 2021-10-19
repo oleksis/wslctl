@@ -4,7 +4,7 @@
 ## ----------------------------------------------------------------------------
 function Convert-ObjectToHashtable {
     [CmdletBinding()]
-    [OutputType('hashtable')]
+    [OutputType([System.Collections.Hashtable])]
     Param (
         [Parameter(ValueFromPipeline)]
         $InputObject
@@ -29,8 +29,7 @@ function Convert-ObjectToHashtable {
             # may be pretty complex
             Write-Output $collection -NoEnumerate
 
-        }
-        elseif ($InputObject -is [psobject]) {
+        } elseif ($InputObject -is [psobject]) {
             # If the object has properties that need enumeration
             # Convert it to its own hash table and return it
             $hash = @{}
@@ -38,8 +37,7 @@ function Convert-ObjectToHashtable {
                 $hash[$property.Name] = Convert-ObjectToHashtable -InputObject $property.Value
             }
             $hash
-        }
-        else {
+        } else {
             # If the object isn't an array, collection, or other object, it's already a hash table
             # So just return it.
             $InputObject

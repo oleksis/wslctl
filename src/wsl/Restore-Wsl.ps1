@@ -25,7 +25,7 @@ function Restore-Wsl {
 
     Write-Host "Check archive integrity ($backupHash)..."
     $archiveHash = (Get-FileHash $backupTgzLocation -Algorithm SHA256).Hash.ToLower()
-    if (-Not ($archiveHash -eq $backupHash)){
+    if (-Not ($archiveHash -eq $backupHash)) {
         Write-Host "Error: Archive File integrity mismatch. Found '$archiveHash'" -ForegroundColor Red
         return $false
     }
@@ -55,7 +55,7 @@ function Restore-Wsl {
     }
 
     # Check target directory does not exists or is empty
-    $wslNameLocation = "$wslLocaltion/$wslName"
+    $wslNameLocation = "$wslLocation/$wslName"
     if (Test-Path -Path $wslNameLocation) {
         $directoryInfo = Get-ChildItem $wslNameLocation | Measure-Object
         if (-Not ($directoryInfo.count -eq 0)) {

@@ -9,8 +9,8 @@
 function Show-Progress {
     Param(
         [Parameter()][string]$Activity = "Current Task",
-        [Parameter()][ValidateScript({ $_ -ge 0 })][long]$Current = 0,
-        [Parameter()][ValidateScript({ $_ -gt 0 })][long]$Total = 100
+        [Parameter()][ValidateScript( { $_ -ge 0 })][long]$Current = 0,
+        [Parameter()][ValidateScript( { $_ -gt 0 })][long]$Total = 100
     )
 
     # Compute percent

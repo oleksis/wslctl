@@ -12,11 +12,11 @@ function Import-Wsl {
         return $false
     }
     # Check target directory does not exists or is empty
-    $wslNameLocation = "$wslLocaltion/$wslName"
+    $wslNameLocation = "$wslLocation/$wslName"
     if (Test-Path -Path $wslNameLocation) {
         $directoryInfo = Get-ChildItem $wslNameLocation | Measure-Object
         if (-Not ($directoryInfo.count -eq 0)) {
-            write-host "Error: Directory $wslNameLocation already in use" -ForegroundColor Red
+            Write-Host "Error: Directory $wslNameLocation already in use" -ForegroundColor Red
             return $false
         }
     }
@@ -28,7 +28,7 @@ function Import-Wsl {
         return $false
     }
     $distroRealSha256 = $distroProperties.sha256
-    $distroPackage  = $distroProperties.archive
+    $distroPackage = $distroProperties.archive
     $distroEndpoint = "$endpoint\$distroPackage"
     $distroLocation = "$cacheLocation\$distroPackage"
 
@@ -40,16 +40,15 @@ function Import-Wsl {
             return $false
         }
         # Check integrity
-        Write-Host "Checking integrity ($distroRealSha256)..." 
+        Write-Host "Checking integrity ($distroRealSha256)..."
         $distroLocationHash = (Get-FileHash $distroLocation -Algorithm SHA256).Hash.ToLower()
-        if (-Not ($distroLocationHash -eq $distroRealSha256)){
+        if (-Not ($distroLocationHash -eq $distroRealSha256)) {
             Write-Host "Error: Archive File integrity mismatch. Found '$distroLocationHash'" -ForegroundColor Red
             Write-Host "       removing  $distroLocation" -ForegroundColor Red
             Remove-Item -Path $distroLocation -Force -ErrorAction Ignore | Out-Null
             return $false
         }
-    }
-    else {
+    } else {
         Write-Host "Distribution '$distroName' already cached ..."
     }
 

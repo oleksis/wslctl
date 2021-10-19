@@ -7,5 +7,5 @@ function Convert-JsonFromHashtable {
         [Parameter(Mandatory = $true)][string]$jsonFile,
         [Parameter(Mandatory = $true)][hashtable]$hashtable
     )
-    $hashtable | ConvertTo-JSON | Set-Content -Path $jsonFile
+    $hashtable | ConvertTo-Json | Set-Content -Path $jsonFile
 }

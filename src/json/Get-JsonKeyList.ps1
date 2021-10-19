@@ -1,7 +1,7 @@
 ## ----------------------------------------------------------------------------
 ## List of jsonfile root keys
 ## ----------------------------------------------------------------------------
-function Get-JsonKeys {
+function Get-JsonKeyList {
     [OutputType('array')]
     Param(
         [Parameter(Mandatory = $true)][string]$jsonFile

@@ -32,6 +32,7 @@ $Settings = @{
         Path = '.\src'
         Severity = @('ParseError', 'Error','Warning', 'Information')
         Recurse = $True
+        ExcludeRule = @('PSAvoidUsingWriteHost')
     }
 }
 

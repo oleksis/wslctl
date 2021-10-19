@@ -44,7 +44,7 @@ function Get-HumanReadableFileSize() {
 
         [parameter(
             Mandatory,
-            ParameterSetName  = 'Path',
+            ParameterSetName = 'Path',
             Position = 0,
             ValueFromPipeline,
             ValueFromPipelineByPropertyName

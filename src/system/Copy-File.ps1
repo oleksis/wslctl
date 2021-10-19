@@ -6,7 +6,7 @@
 ## ----------------------------------------------------------------------------
 function Copy-File {
     [CmdletBinding()]
-    [OutputType('bool')]
+    [OutputType([System.Boolean])]
     Param( [string]$from, [string]$to)
     $result = $true
 
@@ -17,7 +17,7 @@ function Copy-File {
 
         Show-Progress -Activity "Copying file"
 
-        [byte[]]$buff = new-object byte[] 4096
+        [byte[]]$buff = New-Object byte[] 4096
         [long]$total = [int]$count = 0
         do {
             $count = $ffile.Read($buff, 0, $buff.Length)
@@ -31,12 +31,10 @@ function Copy-File {
         Show-Progress -Activity "Copying file" -Current 100
         $ffile.Dispose()
         $tofile.Dispose()
-    }
-    catch {
+    } catch {
         Write-Warning $Error[0]
         $result = $false
-    }
-    finally {
+    } finally {
         if ($null -ne $ffile) { $ffile.Close() }
         if ($null -ne $tofile) { $tofile.Close() }
     }

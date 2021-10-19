@@ -17,8 +17,9 @@
 #   Get-CimInstance Win32_OperatingSystem | Select -ExpandProperty buildnumber => 19041+
 ###############################################################################
 
+
 #Auto-load scripts on PowerShell startup
-Get-ChildItem "${PSScriptRoot}\**\*.ps1" | ForEach-Object{.$_} 
+Get-ChildItem "${PSScriptRoot}\**\*.ps1" | ForEach-Object { .$_ }
 
 $version = "1.0.5"
 $username = "$env:UserName"
@@ -32,7 +33,7 @@ $registryEndpoint = "$endpoint\register.json"
 
 # Local Properties
 $installLocation = "$env:LOCALAPPDATA/Wslctl"      # Installation User Directory
-$wslLocaltion = "$installLocation/Instances"    # Wsl instances location storage
+$wslLocation = "$installLocation/Instances"    # Wsl instances location storage
 $cacheLocation = "$installLocation/Cache"       # Cache Location (Storage of distribution packages)
 $backupLocation = "$installLocation/Backups"    # Backups Location (Storage of distribution packages)
 
@@ -48,8 +49,8 @@ $backupRegistryFile = "$backupLocation/backups.json"  # Local backup register
 
 # Patch ps2exe to keep un*x like syntax (issue #1)
 # Warning: flag option only with one minus will be converted with 2 minus
-if ( ($args | Where { $_ -is [bool] }) ) {
-    $args = $args | Where {$_ -is [String]}                                 # Filter non string arguments
+if ( ($args | Where-Object { $_ -is [bool] }) ) {
+    $args = $args | Where-Object { $_ -is [String] }                                 # Filter non string arguments
     $args = $args | ForEach-Object { $_ -replace "^-([^-].*)", "--`${1}" }  # Change -option to --option
     if ($args -is [string]) { $args = @( "$args" ) }                        # Assert args is array
 }
@@ -79,7 +80,7 @@ switch ($command) {
         foreach ($element in $args) {
             switch ($element) {
                 --no-user { $createUser = $false }
-                --v1      { $wslVersion = 1 }
+                --v1 { $wslVersion = 1 }
                 Default {
                     if ( $null -eq $wslName ) { $wslName = $element }
                     elseif ( $null -eq $distroName ) { $distroName = $element }
@@ -120,7 +121,7 @@ switch ($command) {
         # List all wsl installed
         Assert-ArgumentCount $args 1
         Write-Host "Wsl instances:" -ForegroundColor Yellow
-        Get-WslInstances | ForEach-Object { (" " * 2) + $_ } | Sort-Object
+        Get-WslInstanceList | ForEach-Object { (" " * 2) + $_ } | Sort-Object
     }
 
     start {
@@ -145,9 +146,8 @@ switch ($command) {
             # List all wsl instance status
             # Remove wsl List header and display own
             Write-Host "Wsl instances status:" -ForegroundColor Yellow
-            Get-WslInstancesWithStatus
-        }
-        else {
+            Get-WslInstancesListWithStatus
+        } else {
             # List status for specific wsl instance
             $wslName = $args[1]
             Get-WslInstanceStatus $wslName
@@ -158,43 +158,43 @@ switch ($command) {
         # build [<Wslfile path>] [<--dry-run>]
         Assert-ArgumentCount $args 1 3
 
-        $dryRun=$false
+        $dryRun = $false
         $wslFile = "./Wslfile" # Default file name in directory
-        for ($index = 1; $index -lt $args.length; $index++){
-            switch ($args[$index]){
+        for ($index = 1; $index -lt $args.length; $index++) {
+            switch ($args[$index]) {
                 --dry-run { $dryRun = $true }
-                Default   { $wslFile = $args[$index] }
+                Default { $wslFile = $args[$index] }
             }
-        }   
-        if (-Not (Test-Path $wslFile -PathType leaf)){
+        }
+        if (-Not (Test-Path $wslFile -PathType leaf)) {
             Write-Host "Error: Invalid parameter $wslFile not found" -ForegroundColor Red
             exit 1
         }
         $wslFullPath = Resolve-Path -Path $wslFile -ErrorAction Stop
         # target wsl distro is parent directory name
-        $wslFileDirectory = (get-item $wslFullPath).Directory
-        
-        
+        $wslFileDirectory = (Get-Item $wslFullPath).Directory
+
+
         # Translate WSLfile to Bash commands
         $normalizedCommandHash = Get-Content $wslFullPath | ConvertFrom-WSLFile
         $fromDistroName = $normalizedCommandHash.from
         $wslTargetDistroName = $wslFileDirectory.Name
-        if (-Not $fromDistroName){
+        if (-Not $fromDistroName) {
             Write-Host "Error: Invalid file: no FROM property found" -ForegroundColor Red
             exit 1
         }
-        $bashArray = $normalizedCommandHash | ConvertTo-WSLBashCommands -WorkingDirectory $wslFileDirectory
-        
-        if ($dryRun) { 
-            Write-Host "Base Distro name  : $fromDistroName" 
-            Write-Host "Target Distro name: $wslTargetDistroName" 
-            Write-Host 
+        $bashArray = $normalizedCommandHash | ConvertTo-WSLBashCommandArray -WorkingDirectory $wslFileDirectory
+
+        if ($dryRun) {
+            Write-Host "Base Distro name  : $fromDistroName"
+            Write-Host "Target Distro name: $wslTargetDistroName"
+            Write-Host ""
             Write-Host "--------------Generated Script File --------------------"
-            ($bashArray -Join "`n") 
+            ($bashArray -Join "`n")
             Write-Host "--------------------------------------------------------"
             exit
         }
-        
+
         # Create Temp file with proper extension and set its content
         $tempBashWinFile = Get-ChildItem ([IO.Path]::GetTempFileName()) | `
             Rename-Item -NewName { [IO.Path]::ChangeExtension($_, ".sh") } -PassThru
@@ -212,28 +212,28 @@ switch ($command) {
         Assert-ArgumentCount $args 2 50
 
         ($null, [string]$wslName, [array]$commandline) = $args
-        if ($null -eq $commandline ) { $commandline=@() }
+        if ($null -eq $commandline ) { $commandline = @() }
 
-        
+
         # Check wslname instance already exists
         if (-Not (Test-WslInstanceIsCreated $wslName)) {
             Write-Host "Error: Instance '$wslName' does not exists" -ForegroundColor Red
             exit 1
         }
 
-        if (-not($commandline)){
+        if (-not($commandline)) {
             # No commands: connect to distribution
             Write-Host "Connect to $wslName ..." -ForegroundColor Yellow
             & $wsl --distribution $wslName
             exit $LastExitCode
-        } 
+        }
 
-        # Command passed 
+        # Command passed
         # Check local script:Resolv windows full path to the script
         try { $winScriptFullPath = Resolve-Path -Path $commandline[0] -ErrorAction Stop }
         catch {}
-        
-        if ($winScriptFullPath){
+
+        if ($winScriptFullPath) {
 
             # Check script extension
             if (-Not ([IO.Path]::GetExtension($winScriptFullPath) -eq '.sh')) {
@@ -242,7 +242,7 @@ switch ($command) {
             }
             ([string]$script, [array]$scriptArgs) = $commandline
             $scriptInWslPath = ConvertTo-WslPath $winScriptFullPath
-            $scriptNoPath = Split-Path $script -leaf
+            $scriptNoPath = Split-Path $script -Leaf
             $scriptTmpFile = "/tmp/$scriptNoPath"
             # Copy script file to instance and pass original script path in SCRIPT_WINPATH env variable
             # Call remote script with args
@@ -253,8 +253,8 @@ switch ($command) {
             $exitCode = $LastExitCode
             & $wsl --distribution $wslName --exec rm $scriptTmpFile
             exit $exitCode
-        } 
-        # Standard command to send 
+        }
+        # Standard command to send
         Write-Host "Execute command '$commandline' on $wslName ..." -ForegroundColor Yellow
         & $wsl --distribution $wslName -- SCRIPT_WINPATH= $commandline
         exit $LastExitCode
@@ -298,11 +298,11 @@ switch ($command) {
                 Assert-ArgumentCount $args 3
                 $pattern = $args[2]
                 Write-Host "Available distributions from pattern '$pattern':" -ForegroundColor Yellow
-                (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() | ForEach-Object { 
+                (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() | ForEach-Object {
                     if ($_.Key -match ".*$pattern.*") {
-                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
+                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f $_.Key, $_.Value.date, $_.Value.size, $_.Value.message
                     }
-                } | Sort
+                } | Sort-Object
             }
 
             { @("ls", "list") -contains $_ } {
@@ -310,8 +310,8 @@ switch ($command) {
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Distributions (installable):" -ForegroundColor Yellow
                 (Convert-JsonToHashtable $cacheRegistryFile).GetEnumerator() |  ForEach-Object {
-                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
-                } | Sort
+                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f $_.Key, $_.Value.date, $_.Value.size, $_.Value.message
+                } | Sort-Object
             }
 
             Default {
@@ -390,11 +390,11 @@ switch ($command) {
                 Assert-ArgumentCount $args 3
                 $pattern = $args[2]
                 Write-Host "Available backup from pattern '$pattern':" -ForegroundColor Yellow
-                (Convert-JsonToHashtable $backupRegistryFile).GetEnumerator() | ForEach-Object { 
+                (Convert-JsonToHashtable $backupRegistryFile).GetEnumerator() | ForEach-Object {
                     if ($_.Key -match ".*$pattern.*") {
-                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
+                        "{0,-28} - {1,1} - {2,15} - {3,1}" -f $_.Key, $_.Value.date, $_.Value.size, $_.Value.message
                     }
-                } | Sort
+                } | Sort-Object
             }
 
             { @("ls", "list") -contains $_ } {
@@ -402,8 +402,8 @@ switch ($command) {
                 Assert-ArgumentCount $args 2
                 Write-Host "Available Backups (recoverable):" -ForegroundColor Yellow
                 (Convert-JsonToHashtable $backupRegistryFile).GetEnumerator() |  ForEach-Object {
-                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f  $_.Key,$_.Value.date,$_.Value.size,$_.Value.message
-                } | Sort
+                    "{0,-28} - {1,1} - {2,15} - {3,1}" -f $_.Key, $_.Value.date, $_.Value.size, $_.Value.message
+                } | Sort-Object
             }
 
             Default {
@@ -425,8 +425,7 @@ switch ($command) {
         if ($args.count -eq 1) {
             # Get the default wsl version
             Get-ItemPropertyValue -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss -Name DefaultVersion
-        }
-        else {
+        } else {
             # List status for specific wsl instance
             $wslDefaultVersion = $args[1]
             & $wsl --set-default-version $wslDefaultVersion

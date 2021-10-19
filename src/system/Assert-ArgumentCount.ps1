@@ -17,7 +17,7 @@ function Assert-ArgumentCount {
         Write-Host "Error: too few arguments" -ForegroundColor Red
         exit 1
     }
-    
+
     if ($array.count -gt $maxLength) {
         Write-Host "Error: too many arguments" -ForegroundColor Red
         exit 1

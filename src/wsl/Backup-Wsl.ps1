@@ -5,7 +5,7 @@
 function Backup-Wsl {
     [OutputType('bool')]
     Param( [string]$wslName, [string]$backupAnnotation)
-    $backupdate = Get-Date -format "yyyy/MM/dd HH:mm:ss"
+    $backupdate = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
 
     # Check wslname instance already exists
     if (-Not (Test-WslInstanceIsCreated $wslName)) {
@@ -16,12 +16,12 @@ function Backup-Wsl {
     Write-Host "Compute backup name ..."
     #$backupName = "$wslName-$backupdate"
     # Read the next backup name for the specified wsl name instance
-    $backupPrePattern="$wslName-bkp"
-    $bkpNumber=0
-    Get-JsonKeys $backupRegistryFile | where {$_ -like "$backupPrePattern.*"} | foreach {
+    $backupPrePattern = "$wslName-bkp"
+    $bkpNumber = 0
+    Get-JsonKeyList $backupRegistryFile | Where-Object { $_ -like "$backupPrePattern.*" } | ForEach-Object {
         # remove wslname and backup string from key to get the number
         $bkpPreviousNumber = [int]($_.Split('.')[-1])
-        if ($bkpPreviousNumber -ge $bkpNumber){
+        if ($bkpPreviousNumber -ge $bkpNumber) {
             $bkpNumber = $bkpPreviousNumber + 1
         }
     }

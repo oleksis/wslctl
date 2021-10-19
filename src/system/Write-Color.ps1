@@ -3,6 +3,9 @@
 ## ----------------------------------------------------------------------------
 
 function Write-Color {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSAvoidUsingWriteHost', '', Justification = 'Term Function')]
+
     [CmdletBinding()]
     # @see: https://github.com/EvotecIT/PSWriteColor
     param (
@@ -11,7 +14,6 @@ function Write-Color {
         [int] $StartTab = 0,
         [int] $LinesBefore = 0,
         [int] $LinesAfter = 0,
-        [string] $LogFile = "",
         [string] $TimeFormat = "yyyy-MM-dd HH:mm:ss",
         [switch] $ShowTime,
         [switch] $NoNewLine
@@ -27,22 +29,21 @@ function Write-Color {
     }
     # Add TABS before text
     if ($StartTab -ne 0) {
-        for ($i = 0; $i -lt $StartTab; $i++) { Write-Host "`t" -NoNewLine }
+        for ($i = 0; $i -lt $StartTab; $i++) { Write-Host "`t" -NoNewline }
     }
 
     # Real deal coloring
     if ($Color.Count -ge $Text.Count) {
 
         for ($i = 0; $i -lt $Text.Length; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewline
         }
-    }
-    else {
+    } else {
         for ($i = 0; $i -lt $Color.Length ; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewline
         }
         for ($i = $Color.Length; $i -lt $Text.Length; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $DefaultColor -NoNewLine
+            Write-Host $Text[$i] -ForegroundColor $DefaultColor -NoNewline
         }
     }
 

@@ -1,7 +1,7 @@
 # wslctl
 
-wsl wrapper and cache manager 
-When creating a new wsl instance, the defaut user has the same name as the windows session, 
+wsl wrapper and cache manager
+When creating a new wsl instance, the defaut user has the same name as the windows session,
 and the default password is `ChangeMe` (to be changed after initialization with command `passwd`).
 That user is in the `sudo` system group.
 
@@ -39,7 +39,10 @@ Wsl backup managment commands:
 In order to ba able to call build.ps1 tasks, you need to import `InvokeBuild` powershell module:
 ```Powershell
 Install-Module -name InvokeBuild -Scope CurrentUser
-Invoke-Build -File ./.build.ps1 -Configuration 'Test' 
+Invoke-Build -File ./.build.ps1 -Configuration 'Test'
+
+# Correct with PSScriptAnalyser
+Get-Help Get-ScriptAnalyzerRule -ShowWindow
 ```
 
 #### Create a release
@@ -52,8 +55,8 @@ Invoke-Build -File ./.build.ps1 -Configuration 'Test'
 1. Push to upstream: `git push --tags origin master`.
 
 ## NOTE
-Not be able to starts interactive bash with sage of Ps2exe ... 
-So deliver ps1 script file only.. 
+Not be able to starts interactive bash with sage of Ps2exe ...
+So deliver ps1 script file only..
 
 
 ## Registry dictionary file

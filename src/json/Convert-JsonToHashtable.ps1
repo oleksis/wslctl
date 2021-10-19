@@ -7,7 +7,7 @@ function Convert-JsonToHashtable {
     Param( [Parameter(Mandatory = $true)][string]$jsonFile )
     $hashtable = @{}
     if (Test-Path -Path $jsonFile) {
-        $hashtable = Get-Content -Path $jsonFile -Raw | ConvertFrom-JSON  | Convert-ObjectToHashtable
+        $hashtable = Get-Content -Path $jsonFile -Raw | ConvertFrom-Json  | Convert-ObjectToHashtable
     }
     return $hashtable
 }

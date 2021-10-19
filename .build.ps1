@@ -107,7 +107,7 @@ task Fail_If_Failed_Integration_Test {
 task Test Unit_Tests,
     Fail_If_Failed_Unit_Test,
     Integration_Tests,
-    Fail_If_Failed_Integration_Test -if({ @("Tests", "all") -contains $Configuration})
+    Fail_If_Failed_Integration_Test -if({ @("Test", "all") -contains $Configuration})
 
 
 task Analyze_Code {
@@ -126,7 +126,7 @@ task Fail_If_Analyze_Findings {
 }
 
 task Analyze Analyze_Code,
-    Fail_If_Analyze_Findings -if({ @("Tests", "all") -contains $Configuration})
+    Fail_If_Analyze_Findings -if({ @("Test", "all") -contains $Configuration})
 
 
 

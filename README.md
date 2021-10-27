@@ -34,6 +34,16 @@ Wsl backup managment commands:
    backup purge                              Remove all created backups
 ```
 
+> Note: Because of `powershell` remove quotes from command line, replace problem characters in arguments as follow :
+```powershell
+PS> ./src/wslctl.ps1 backup create ubuntu-20.04 "focal backup"
+ok
+ps> powershell ./src/wslctl.ps1 backup create ubuntu-20.04 "focal backup"
+ok
+ps> powershell ./src/wslctl.ps1 backup create ubuntu-20.04 "'focal backup'"
+Error: too few arguments
+```
+
 ## Development
 
 In order to ba able to call build.ps1 tasks, you need to import `InvokeBuild` powershell module:
@@ -53,6 +63,18 @@ Get-Help Get-ScriptAnalyzerRule -ShowWindow
 1. Run `$Version=(cmd /c powershell.exe .\src\wslctl.ps1 --version)` to retreive the binary version.
 1. Create the tag with `git tag $Version`.
 1. Push to upstream: `git push --tags origin master`.
+
+
+#### Note Building Executable:
+```Powershell
+Install-Module -Name ps2exe -Scope CurrentUser
+ps2exe wslctl.ps1
+```
+> Note: WSL2 is available from windows 10 release id 2009+ (build 19041+)
+ to check:
+    ```Powershell
+   (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId => 2009#   Get-CimInstance Win32_OperatingSystem | Select -ExpandProperty buildnumber => 19041+
+   ```
 
 ## NOTE
 Not be able to starts interactive bash with sage of Ps2exe ...

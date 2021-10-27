@@ -1,0 +1,302 @@
+
+using module "..\Application\AppConfig.psm1"
+using module "..\Application\ServiceLocator.psm1"
+using module "..\Tools\FileUtils.psm1"
+
+Class WslService
+{
+
+    [String] $Binary
+    [String] $Location
+    [String] $defaultUsename
+    [String] $defaultPassword
+
+
+    WslService()
+    {
+        $this.Binary = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.Binary
+        $this.Location = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.Location
+
+        $this.defaultUsename = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultUsername
+        $this.defaultPassword = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultPassword
+    }
+
+    [String] getLocation([String] $name)
+    {
+        return  [FileUtils]::joinPath($this.Location, $name)
+    }
+
+    [void] checkBeforeImport([String] $name) { $this.checkBeforeImport($name, $false) }
+    [void] checkBeforeImport([String] $name, [Boolean] $forced)
+    {
+        if (($this.exists($name)) -And (-Not $forced))
+        {
+            throw "Instance '$name' already exists"
+        }
+
+        # Remove existing instance
+        if ($this.exists($name) -and $this.remove($name) -ne 0)
+        {
+            throw "Can not destroy active $name"
+        }
+
+        # Check target directory does not exists or is empty
+        $dir = $this.getLocation($name)
+        if (Test-Path -Path $dir)
+        {
+            $directoryInfo = Get-ChildItem $dir | Measure-Object
+            if (-Not ($directoryInfo.count -eq 0))
+            {
+                if (-not $forced)
+                {
+                    throw "Directory $dir already in use"
+                }
+                Remove-Item -LiteralPath $dir -Force -Recurse -ErrorAction Ignore | Out-Null
+
+            }
+        }
+
+    }
+
+    [Int32] import ([String] $name, [String] $archive) { return $this.import($name, $archive, -1, $false) }
+    [Int32] import ([String] $name, [String] $archive, [int] $version, [Boolean]$createDefaultUser)
+    {
+        if (($version -lt 1) -or ($version -gt 2))
+        {
+            $version = -1
+        }
+        if ($version = -1)
+        {
+            $version = $this.getDefaultVersion()
+        }
+
+        $dir = $this.getLocation($name)
+        if (Test-Path -Path $dir)
+        {
+            New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        }
+
+        & $this.Binary --import $name $dir $archive --version $version
+        if ($LastExitCode -ne 0)
+        {
+            throw "Could nor create '$name' instance"
+        }
+
+        # Adjust Wsl Distro Name
+        & $this.Binary --distribution $name sh -c "echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
+        if ($createDefaultUser)
+        {
+            $this.createDefaultUser($name, $this.defaultUsename, $this.defaultPassword)
+        }
+        return $LastExitCode
+    }
+
+    [System.Collections.Hashtable] export([String] $name, [String] $archiveName)
+    {
+        if ($this.isRunning($name))
+        {
+            Write-Host "Stop instance '$name'"
+            $this.terminate($name)
+        }
+
+        $backupTar = "$archiveName-amd64-wsl-rootfs.tar"
+        $backupTgz = "$backupTar.gz"
+
+        # Export WSL
+        & $this.Binary --export $name $backupTar
+        & $this.Binary --distribution $name --exec gzip $backupTar
+
+        $backupHash = [FileUtils]::sha256($backupTgz)
+        $backupSize = [FileUtils]::getHumanReadableSize($backupTgz).Size
+        $version = $this.version($name)
+
+        # Finally append backup to the register
+        $backupdate = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
+        return @{
+            wslname    = $name
+            wslversion = $version
+            archive    = $backupTgz
+            sha256     = $backupHash
+            size       = $backupSize
+            date       = $backupdate
+        }
+    }
+
+    [int] convert([String] $name, [int]$version)
+    {
+        if ($this.isRunning($name))
+        {
+            Write-Host "Stop instance '$name'"
+            $this.terminate($name)
+        }
+
+        &  $this.Binary  --set-version $name $version
+        return $LastExitCode
+    }
+
+    [int32] start([String] $name)
+    {
+        # warning: wsl binary always returns 0 even if no distribution exists
+        &  $this.Binary --distribution $name bash -c "nohup sleep 99999 </dev/null >/dev/null 2>&1 & sleep 1"
+        return $LastExitCode
+    }
+
+    [Int32] terminate([String] $name)
+    {
+        & $this.Binary --terminate $name
+        return $LastExitCode
+    }
+
+    [Int32] shutdown()
+    {
+        & $this.Binary --shutdown
+        return $LastExitCode
+    }
+
+
+    [Boolean] isRunning([String] $name)
+    {
+        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
+        # ("Unicode"-encoded) output rather than respecting the
+        # console's (OEM) code page.
+        $prev = [Console]::OutputEncoding;
+        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
+
+        $isrunning = [bool](& $this.Binary --list --running |`
+                Select-String -Pattern "^$name *"  -Quiet)
+
+        [Console]::OutputEncoding = $prev
+        return $isRunning
+    }
+
+
+    [Boolean] exists([String] $name)
+    {
+        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
+        # ("Unicode"-encoded) output rather than respecting the
+        # console's (OEM) code page.
+        $prev = [Console]::OutputEncoding;
+        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
+
+        $exists = [bool](& $this.Binary --list --verbose |`
+                Select-String -Pattern " +$name +" -Quiet)
+
+        [Console]::OutputEncoding = $prev
+        return $exists
+    }
+
+    [Array] list()
+    {
+        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
+        # ("Unicode"-encoded) output rather than respecting the
+        # console's (OEM) code page.
+        $prev = [Console]::OutputEncoding;
+        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
+
+        $result = (& $this.Binary --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
+
+        [Console]::OutputEncoding = $prev
+        return $result
+    }
+
+    [String] status([String] $name)
+    {
+        if (-Not $this.exists($name))
+        {
+            return "* $name is not a wsl instance"
+        }
+        return ( ($this.statusAll() | Select-String -Pattern " +$name +" | Out-String).Trim() -Split '[\*\s]+' |`
+                Where-Object { $_ } )[1]
+    }
+
+    [int] version([String] $name)
+    {
+        if (-Not $this.exists($name))
+        {
+            return -1
+        }
+        return [int]( ($this.statusAll() | Select-String -Pattern " +$name +" | Out-String).Trim() -Split '[\*\s]+' |`
+                Where-Object { $_ } )[2]
+
+    }
+
+
+    [String[]] statusAll()
+    {
+        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
+        # ("Unicode"-encoded) output rather than respecting the
+        # console's (OEM) code page.
+        $prev = [Console]::OutputEncoding;
+        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
+
+        $result = (& $this.Binary --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
+
+        [Console]::OutputEncoding = $prev
+        return [String[]]$result
+    }
+
+
+    [Int32] remove([String] $name)
+    {
+        if (-Not $this.exists($name))
+        {
+            throw "Instance '$name' not found"
+        }
+
+        & $this.Binary --unregister $name
+        if ($LastExitCode -ne 0)
+        {
+            throw "Enable to remove '$name' instance"
+        }
+        $dir = $this.getLocation([String] $name)
+        Remove-Item -LiteralPath $dir -Force -Recurse -ErrorAction Ignore | Out-Null
+        return $LastExitCode
+    }
+
+    [Int32] createDefaultUser([String] $name, [String] $username, [String] $passwd)
+    {
+        if (-Not $this.exists($name))
+        {
+            throw "Instance '$name' not found"
+        }
+        # Choosed Password not set !!
+        & $this.Binary --distribution $name --exec /usr/sbin/addgroup --gid 1000 $username
+        & $this.Binary --distribution $name --exec /usr/sbin/adduser --quiet --disabled-password --gecos `` --uid 1000 --gid 1000 $username
+        & $this.Binary --distribution $name --exec /usr/sbin/usermod -aG sudo $username
+        & $this.Binary --distribution $name --% /usr/sbin/usermod --password $(/usr/bin/openssl passwd -crypt ChangeMe) $(/usr/bin/id -nu 1000)
+        & $this.Binary --distribution $name --% /usr/bin/printf '\n[user]\ndefault=%s\n' $(/usr/bin/id -nu 1000) >> /etc/wsl.conf
+        & $this.Binary --terminate $name
+        return $LastExitCode
+    }
+
+
+    [String] wslPath([String] $winPath)
+    {
+        return & $this.Binary wslpath -u $winPath.Replace('\', '\\')
+    }
+
+
+    [String] winPath([String] $wslPath)
+    {
+        return & $this.Binary wslpath -w $wslPath.Replace('\', '\\')
+    }
+
+
+    [Int32] setDefaultVersion([int] $version)
+    {
+        if (($version -lt 1) -or ($version -gt 2))
+        {
+            throw "Invalid version number $version"
+        }
+        & $this.Binary --set-default-version $version
+        return $LastExitCode
+    }
+
+    [String] getDefaultVersion()
+    {
+        # Get the default wsl version
+        return Get-ItemPropertyValue `
+            -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss `
+            -Name DefaultVersion
+    }
+}

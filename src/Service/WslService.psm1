@@ -3,20 +3,6 @@ using module "..\Application\AppConfig.psm1"
 using module "..\Application\ServiceLocator.psm1"
 using module "..\Tools\FileUtils.psm1"
 
-function test_exec()
-{
-    [CmdletBinding()]
-    param (
-        [Parameter()]
-        [String]
-        $binary,
-
-        [Parameter()]
-        [String]
-        $wslName
-    )
-    & $binary --distribution $wslName
-}
 
 Class WslService
 {

@@ -194,7 +194,7 @@ drwx------ 1 root     root         4096 Dec 10  2020 tmp6g20k01_
 PS1> .\src\wslctl.cmd exec ubuntu-18.04 .\tests\test-called-script.sh arg1 arg2
 Execute test.sh on ubuntu-18.04 ...
 SCRIPT_WINPATH=/mnt/c/Users/me/home/github/wslctl/tests/test-called-script.sh
-toto from script file
+hello from script file !
 arg: arg1
 arg: arg2
 

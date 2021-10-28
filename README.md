@@ -157,3 +157,88 @@ Example of `register.json` content :
 }
 
 ```
+
+
+# Usage
+
+## call exec
+
+```powershell
+# Call remote command
+PS1> .\src\wslctl.cmd exec ubuntu-14.04.5 echo "toto tata"
+Execute command 'echo toto tata' on ubuntu-14.04.5 ...
+toto tata
+
+ PS1> .\src\wslctl.cmd exec ubuntu-18.04 "echo tata; echo toto"
+Execute command 'echo tata; echo toto' on ubuntu-18.04 ...
+tata
+toto
+
+PS1>  .\src\wslctl.cmd exec ubuntu-18.04 "ls -lrt /tmp"
+Execute command 'ls -lrt /tmp' on ubuntu-18.04 ...
+total 141920
+drwx------ 1 root     root         4096 Jul 31  2020 tmp5lkby6kk
+drwx------ 1 root     root         4096 Sep 24  2020 pulse-CcctT9RwKSB1
+drwx------ 1 root     root         4096 Dec 10  2020 tmp6g20k01_
+...
+
+PS1> .\src\wslctl.cmd exec ubuntu-18.04 ls -lrt /tmp
+Execute command 'ls -lrt /tmp' on ubuntu-18.04 ...
+total 141920
+drwx------ 1 root     root         4096 Jul 31  2020 tmp5lkby6kk
+drwx------ 1 root     root         4096 Sep 24  2020 pulse-CcctT9RwKSB1
+drwx------ 1 root     root         4096 Dec 10  2020 tmp6g20k01_
+...
+
+# Call local script with args
+PS1> .\src\wslctl.cmd exec ubuntu-18.04 .\tests\test-called-script.sh arg1 arg2
+Execute test.sh on ubuntu-18.04 ...
+SCRIPT_WINPATH=/mnt/c/Users/me/home/github/wslctl/tests/test-called-script.sh
+toto from script file
+arg: arg1
+arg: arg2
+
+# Connect to wsl
+PS1>  .\src\wslctl.cmd exec ubuntu-18.04
+Connect to ubuntu-18.04 ...
+me@host:/mnt/c/Users/me/home/github/wslctl$
+```
+
+## Call instance creation/removal/connection
+
+```powershell
+# create wsl instance named 'my-ubuntu' with release 'ubuntu-18.04'
+# default wsl version
+PS1> .\src\wslctl.cmd create my-ubuntu ubuntu-18.04
+* Import my-ubuntu
+Check import requirements ...
+Dowload distribution 'ubuntu-18.04' ...
+Create wsl instance 'my-ubuntu' (wsl-version: 2)...
+Adding group `me` (GID 1000) ...
+Done.
+* my-ubuntu created
+  Could be started with command: wslctl start my-ubuntu
+
+# remove it
+PS1> .\src\wslctl.cmd rm my-ubuntu
+*  my-ubuntu removed
+
+# same creation with specific wsl version
+PS1> .\src\wslctl.cmd create my-ubuntu ubuntu-18.04 --v1
+* Import my-ubuntu
+Check import requirements ...
+Dowload distribution 'ubuntu-18.04' ...
+Create wsl instance 'my-ubuntu' (wsl-version: 1)...
+Adding group `me` (GID 1000) ...
+Done.
+* my-ubuntu created
+  Could be started with command: wslctl start my-ubuntu
+
+# connect to it
+> .\src\wslctl.cmd exec my-ubuntu
+Connect to my-ubuntu ...
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+me@host:/mnt/c/Users/me/home/github/wslctl$
+```

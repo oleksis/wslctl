@@ -168,6 +168,43 @@ Class DefaultController : AbstractController
         }
     }
 
+    [void] exec ([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 1, 50)
+
+        ([string]$wslName, [array]$commandline) = $Arguments
+        if ($null -eq $commandline ) { $commandline = @() }
+        $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
+
+        if ($Arguments.Count -eq 1)
+        {
+            # No commands: connect to distribution
+            Write-Host "Connect to $wslName ..." -ForegroundColor Yellow
+            $wslService.connect($wslName)
+            return
+        }
+
+        # Script file execution
+        if (Test-Path $commandline[0] -PathType leaf)
+        {
+            ([string]$script, [array]$scriptArgs) = $commandline
+            $scriptNoPath = Split-Path $script -Leaf
+            Write-Host "Execute $scriptNoPath on $wslName ..." -ForegroundColor Yellow
+            if ($wslService.exec($wslName, $script, $scriptArgs) -ne 0)
+            {
+                throw "Command result with errors"
+            }
+            return
+        }
+
+        # Inline Script execution
+        Write-Host "Execute command '$commandline' on $wslName ..." -ForegroundColor Yellow
+        if ($wslService.exec($wslName, $commandline) -ne 0)
+        {
+            throw "Command result with errors"
+        }
+    }
+
     [void] halt ([Array] $Arguments)
     {
         $this._assertArgument( $Arguments, 0)
@@ -322,4 +359,4 @@ Class DefaultController : AbstractController
 }
 
 Write-Host "missing BaseCommandService.Build " -ForegroundColor Red
-Write-Host "missing BaseCommandService.Exec " -ForegroundColor Red
+

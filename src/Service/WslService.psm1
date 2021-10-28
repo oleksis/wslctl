@@ -3,6 +3,21 @@ using module "..\Application\AppConfig.psm1"
 using module "..\Application\ServiceLocator.psm1"
 using module "..\Tools\FileUtils.psm1"
 
+function test_exec()
+{
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [String]
+        $binary,
+
+        [Parameter()]
+        [String]
+        $wslName
+    )
+    & $binary --distribution $wslName
+}
+
 Class WslService
 {
 
@@ -84,11 +99,25 @@ Class WslService
 
         # Adjust Wsl Distro Name
         & $this.Binary --distribution $name sh -c "echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
+        if ($LastExitCode -ne 0)
+        {
+            throw "Could nor set '$name' /lib/init/wsl-distro-name.sh"
+        }
+        $returnCode = 0
         if ($createDefaultUser)
         {
-            $this.createDefaultUser($name, $this.defaultUsename, $this.defaultPassword)
+            $commandLine = @(
+                "/usr/sbin/addgroup --gid 1000 $($this.defaultUsename)"
+                "/usr/sbin/adduser --quiet --disabled-password --gecos '' --uid 1000 --gid 1000 $($this.defaultUsename)"
+                "/usr/sbin/usermod -aG sudo $($this.defaultUsename)"
+                "userpass=`$(/usr/bin/openssl passwd -crypt $($this.defaultPassword))"
+                "/usr/sbin/usermod --password `$userpass $($this.defaultUsename)"
+                "/usr/bin/printf '\n[user]\ndefault=%s\n' $($this.defaultUsename) >>/etc/wsl.conf"
+            ) -Join ";"
+            $returnCode = $this.exec($name, @( "$commandLine" ))
+            & $this.Binary --terminate $name
         }
-        return $LastExitCode
+        return $returnCode
     }
 
     [System.Collections.Hashtable] export([String] $name, [String] $archiveName)
@@ -253,22 +282,49 @@ Class WslService
         return $LastExitCode
     }
 
-    [Int32] createDefaultUser([String] $name, [String] $username, [String] $passwd)
+    [Int32] connect([string]$name)
     {
+        return $this.exec($name, @("/bin/bash"))
+    }
+
+    [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs)
+    {
+        if (-Not ([IO.Path]::GetExtension($scriptPath) -eq '.sh'))
+        {
+            throw "Script has to be a shell file (extension '.sh')"
+        }
+        if (-not (Test-Path $scriptPath -PathType leaf))
+        {
+            throw "Script not found"
+        }
+        $winScriptFullPath = Resolve-Path -Path $scriptPath -ErrorAction Stop
+        $wslScriptPath = $this.wslPath($winScriptFullPath)
+        $scriptNoPath = Split-Path $scriptPath -Leaf
+        $scriptTmpFile = "/tmp/$scriptNoPath"
+
+        $commandLine = @(
+            "cp $wslScriptPath $scriptTmpFile"
+            "chmod +x $scriptTmpFile"
+            "SCRIPT_WINPATH=$wslScriptPath $scriptTmpFile $scriptArgs"
+            "return_code=`$?"
+            "rm $scriptTmpFile"
+            "exit `$return_code"
+        ) -Join ";"
+        return $this.exec($name, @( "$commandLine" ))
+    }
+
+    [Int32] exec([string]$name, [array]$commandline)
+    {
+        if ($null -eq $commandline ) { $commandline = @() }
         if (-Not $this.exists($name))
         {
             throw "Instance '$name' not found"
         }
-        # Choosed Password not set !!
-        & $this.Binary --distribution $name --exec /usr/sbin/addgroup --gid 1000 $username
-        & $this.Binary --distribution $name --exec /usr/sbin/adduser --quiet --disabled-password --gecos `` --uid 1000 --gid 1000 $username
-        & $this.Binary --distribution $name --exec /usr/sbin/usermod -aG sudo $username
-        & $this.Binary --distribution $name --% /usr/sbin/usermod --password $(/usr/bin/openssl passwd -crypt ChangeMe) $(/usr/bin/id -nu 1000)
-        & $this.Binary --distribution $name --% /usr/bin/printf '\n[user]\ndefault=%s\n' $(/usr/bin/id -nu 1000) >> /etc/wsl.conf
-        & $this.Binary --terminate $name
-        return $LastExitCode
-    }
 
+        $processArgs = "--distribution $name -- $commandline"
+        $process = Start-Process $this.Binary $processArgs -NoNewWindow -Wait -ErrorAction Stop -PassThru
+        return $process.ExitCode
+    }
 
     [String] wslPath([String] $winPath)
     {

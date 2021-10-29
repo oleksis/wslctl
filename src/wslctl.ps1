@@ -11,6 +11,7 @@ using module ".\Application\ServiceLocator.psm1"
 using module ".\Application\AppConfig.psm1"
 using module ".\Application\ControllerManager.psm1"
 
+using module ".\Service\BuilderService.psm1"
 using module ".\Service\RegistryService.psm1"
 using module ".\Service\BackupService.psm1"
 using module ".\Service\WslService.psm1"
@@ -25,7 +26,10 @@ $version = "1.0.5"
 [ServiceLocator]::getInstance().add( 'config', [AppConfig]::new($version) )
 [ServiceLocator]::getInstance().add( 'registry', [RegistryService]::new() )
 [ServiceLocator]::getInstance().add( 'backup', [BackupService]::new() )
+[ServiceLocator]::getInstance().add( 'builder', [BuilderService]::new() )
 [ServiceLocator]::getInstance().add( 'wsl-wrapper', [WslService]::new() )
+
+
 
 [ControllerManager]::new(@(
     [DefaultController]::new(),

@@ -3,6 +3,7 @@ using module "..\Application\ServiceLocator.psm1"
 using module "..\Application\AppConfig.psm1"
 using module "..\Application\AbstractController.psm1"
 using module "..\Service\RegistryService.psm1"
+using module "..\Service\BuilderService.psm1"
 using module "..\Service\WslService.psm1"
 using module "..\Tools\FileUtils.psm1"
 using module "..\Tools\ExtendedConsole.psm1"
@@ -205,6 +206,50 @@ Class DefaultController : AbstractController
         }
     }
 
+    [void] build ([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 0, 4)
+
+        $dryRun = $false
+        # Default file name in directory
+        $wslFilePath = (Get-Location).Path
+        $tag = $null
+        $tagTxt = $dryRunTxt = ""
+        # Parse arguments
+        for ($index = 0; $index -lt $Arguments.length; $index++)
+        {
+            switch -regex ($Arguments[$index])
+            {
+                --dry-run
+                {
+                    $dryRun = $true
+                    $dryRunTxt = "DryRun - "
+                }
+
+                '--tag=[^ ]+'
+                {
+                    $tag = ($Arguments[$index] -Split ("="))[1]
+                    #$index++
+                    $tagTxt = " '$tag' with"
+                }
+                Default
+                {
+                    if ($Arguments[$index].StartsWith("--"))
+                    {
+                        throw "Invalid option $($Arguments[$index])"
+                    }
+                    $wslFilePath = $Arguments[$index]
+                }
+            }
+        }
+
+        Write-Host "$($dryRunTxt)Building$($tagTxt) $wslFilePath" -ForegroundColor Yellow
+        $builder = [BuilderService][ServiceLocator]::getInstance().get('builder')
+        $builder.build($wslFilePath, $tag, $dryRun)
+        Write-Host "* Wsl built"
+    }
+
+
     [void] halt ([Array] $Arguments)
     {
         $this._assertArgument( $Arguments, 0)
@@ -213,6 +258,7 @@ Class DefaultController : AbstractController
         $wslService.shutdown()
         Write-Host "* Wsl halted"
     }
+
 
 
     [void] version([Array] $Arguments)
@@ -323,7 +369,7 @@ Class DefaultController : AbstractController
             @("   status [<wsl_name>]                              ", "List all or specified wsl Instance status"),
             @("   halt                                             ", "Shutdown all wsl instances"),
             @("   version [|<wsl_name>|default [|<version>]]       ", "Set/get default version or get  wsl instances version"),
-            @("   build   [<Wslfile>] [--dry-run]                  ", "Build an instance (docker like)")
+            @("   build   [<Wslfile>] [--tag=<distro_name>]        ", "Build an instance (docker like)")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
 
@@ -355,8 +401,4 @@ Class DefaultController : AbstractController
 
     }
 
-
 }
-
-Write-Host "missing BaseCommandService.Build " -ForegroundColor Red
-

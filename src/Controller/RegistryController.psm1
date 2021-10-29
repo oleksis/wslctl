@@ -1,5 +1,6 @@
 
 using module "..\Application\ServiceLocator.psm1"
+using module "..\Application\AppConfig.psm1"
 using module "..\Application\AbstractController.psm1"
 using module "..\Tools\ExtendedConsole.psm1"
 using module "..\Service\RegistryService.psm1"
@@ -22,6 +23,15 @@ Class RegistryController : AbstractController
         Write-Host "* Local registry updated"
     }
 
+    [void] set([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 1)
+        [ExtendedConsole]::WriteColor( "Setting Registry Remote Base Url", "Yellow")
+        $remoteUrl = $Arguments[0]
+        $config = [AppConfig]([ServiceLocator]::getInstance().get('config'))
+        $config.Custom.registry = $remoteUrl
+        $config.commit()
+    }
 
 
     [void] list([Array] $Arguments)

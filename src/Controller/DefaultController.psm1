@@ -359,7 +359,7 @@ Class DefaultController : AbstractController
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl managment commands:", $titleColor)
         @(
-            @("   create  <wsl_name> [<distro_name>] [|version]    ", "Create a named wsl instance from distribution"),
+            @("   create  <wsl_name> [<distro_name>] [|--v[1|2]]  ", "Create a named wsl instance from distribution"),
             @("   convert <wsl_name> <version>                     ", "Concert instance to specified wsl version"),
             @("   rm      <wsl_name>                               ", "Remove a wsl instance by name"),
             @("   exec    <wsl_name> [|<file.sh>|<cmd>]            ", "Execute specified script|cmd on wsl instance by names"),
@@ -377,6 +377,7 @@ Class DefaultController : AbstractController
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl distribution registry commands:", $titleColor)
         @(
+            @("   registry set <remote_url>                        ", "Set the remote registry (custom configuratio file)"),
             @("   registry update                                  ", "Update local distribution dictionary"),
             @("   registry pull   <distro>                         ", "Pull remote distribution to local registry"),
             @("   registry purge                                   ", "Remove all local registry content"),

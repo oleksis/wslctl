@@ -29,7 +29,7 @@ Class RegistryController : AbstractController
         [ExtendedConsole]::WriteColor( "Setting Registry Remote Base Url", "Yellow")
         $remoteUrl = $Arguments[0]
         $config = [AppConfig]([ServiceLocator]::getInstance().get('config'))
-        $config.Custom.registry = $remoteUrl
+        $config.UserConfig.registry = $remoteUrl
         $config.commit()
     }
 

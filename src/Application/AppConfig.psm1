@@ -5,7 +5,7 @@ Class AppConfig
 {
 
     # Properties:
-    [JsonHashtableFile] $Custom
+    [JsonHashtableFile] $UserConfig
     [System.Collections.Hashtable] $Backup
     [System.Collections.Hashtable] $Cache
     [System.Collections.Hashtable] $Registry
@@ -24,33 +24,47 @@ Class AppConfig
 
     [void] initialize()
     {
-        $this.Custom = [JsonHashtableFile]::new( $null, @{
-                wsl      = 'c:\windows\system32\wsl.exe'
-                registry = '\\qu1-srsrns-share.seres.lan\delivery\wsl\images'
-                appData  = "$env:LOCALAPPDATA/Wslctl"
-            })
+        # get main script location and change extension
+        $scriptPath = Get-PSCallStack | Select-Object -Skip 2 -First 1 -ExpandProperty 'ScriptName'
+        $confPath = [System.IO.Path]::ChangeExtension($scriptPath, "json")
 
+        $this.UserConfig = [JsonHashtableFile]::new( $confPath, @{})
+
+        # Merge with defaults
+        $mergeUserConfig =  @{
+            wsl      = 'c:\windows\system32\wsl.exe'
+            registry = '\\qu1-srsrns-share.seres.lan\delivery\wsl\images'
+            appData  = [FileUtils]::joinPath($env:LOCALAPPDATA,"Wslctl")
+        }
+        $this.UserConfig.getenumerator() | ForEach-Object {
+            if ($mergeUserConfig.ContainsKey($_.Key))
+            {
+                $mergeUserConfig.$($_.Key) = $_.Value
+            }
+        }
+
+        # Final: configure services
         $this.Wsl = @{}
-        $this.Wsl.Binary = $this.Custom.wsl
-        $this.Wsl.Location = [FileUtils]::joinPath($this.Custom.appData, "Instances")
+        $this.Wsl.Binary = $mergeUserConfig.wsl
+        $this.Wsl.Location = [FileUtils]::joinPath($mergeUserConfig.appData, "Instances")
         $this.Wsl.DefaultUsername = $this.Username
         $this.Wsl.DefaultPassword = "ChangeMe"
 
         $this.Registry = @{}
-        $this.Registry.Remote = $this.Custom.registry
+        $this.Registry.Remote = $mergeUserConfig.registry
         $this.Registry.Endpoint = [FileUtils]::joinUrl($this.Registry.Remote, "register.json")
-        $this.Registry.Location = [FileUtils]::joinPath($this.Custom.appData, "Registry")
+        $this.Registry.Location = [FileUtils]::joinPath($mergeUserConfig.appData, "Registry")
         $this.Registry.File = [FileUtils]::joinPath($this.Registry.Location, "register.json")
 
 
         $this.Backup = @{}
-        $this.Backup.Location = [FileUtils]::joinPath($this.Custom.appData, "Backups")
+        $this.Backup.Location = [FileUtils]::joinPath($mergeUserConfig.appData, "Backups")
         $this.Backup.File = [FileUtils]::joinPath($this.Backup.Location, "backups.json")
 
     }
 
     [void] commit()
     {
-        $this.Custom.commit()
+        $this.UserConfig.commit()
     }
 }

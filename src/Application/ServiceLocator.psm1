@@ -17,7 +17,7 @@ Class ServiceLocator
 
     [void] add([String] $name, [Object] $service)
     {
-        $this.Services.Add($name, $service)
+        $this.Services.$name= $service
     }
 
     static [ServiceLocator] getInstance()

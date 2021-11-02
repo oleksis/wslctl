@@ -66,7 +66,7 @@ Class WslService
         {
             $version = -1
         }
-        if ($version = -1)
+        if ($version -eq -1)
         {
             $version = $this.getDefaultVersion()
         }

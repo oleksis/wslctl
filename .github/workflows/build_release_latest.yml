@@ -21,7 +21,7 @@ jobs:
         with:
           modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild
           shell: pwsh
-      
+
         # Setting up the powershell module cache
       - name: Setup PowerShell module cache
         id: cacher
@@ -29,7 +29,7 @@ jobs:
         with:
             path: ${{ steps.psmodulecache.outputs.modulepath }}
             key: ${{ steps.psmodulecache.outputs.keygen }}
-        
+
         # Installing the required powershell module, if not cached
       - name: Install required PowerShell modules
         if: steps.cacher.outputs.cache-hit != 'true'
@@ -55,7 +55,7 @@ jobs:
         with:
           modules-to-cache: InvokeBuild, Ps2exe
           shell: powershell
-      
+
         # Setting up the powershell module cache
       - name: Setup PowerShell module cache
         id: cacher
@@ -63,7 +63,7 @@ jobs:
         with:
             path: ${{ steps.psmodulecachebuild.outputs.modulepath }}
             key: ${{ steps.psmodulecachebuild.outputs.keygen }}
-        
+
         # Installing the required powershell module, if not cached
       - name: Install required PowerShell modules
         if: steps.cacher.outputs.cache-hit != 'true'
@@ -79,7 +79,6 @@ jobs:
         with:
           path: |
             build/dist/*.zip
-            build/dist/*/*.exe
           retention-days: 1
           if-no-files-found: error
 

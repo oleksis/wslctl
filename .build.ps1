@@ -1,4 +1,4 @@
-#Requires -Modules 'InvokeBuild'
+# Requires -Modules 'InvokeBuild'
 
 param (
     [ValidateSet("Release", "Test","all")]$Configuration = "Test",
@@ -12,7 +12,7 @@ $Settings = @{
     BuildOutput = "$PSScriptRoot\build"
     DistFolder = "$PSScriptRoot\build\dist"
     TestDependency = @('Pester','PsScriptAnalyzer','InvokeBuild')
-    BuildDependency = @('Ps2exe','InvokeBuild')
+    BuildDependency = @('InvokeBuild')
     SourceFolder = "$PSScriptRoot\src"
 
     UnitTestParams = @{
@@ -143,69 +143,37 @@ task Build_Initialize {
     $Settings.AppVersion = $Version
     $Settings.BuildParams = @{}
     @('win32','win64') | ForEach-Object -Process {
-        $BinaryFile = "$($Settings.DistFolder)\$_\$AppName.exe"
         $ArchiveFile = "$($Settings.DistFolder)\$AppName-v$Version-$_.zip"
-        $SourceFile = "$($Settings.SourceFolder)\$AppName.ps1"
         $Settings.BuildParams.Add($_, @{
-            SourceFile = $SourceFile
+            SourceFiles = $Settings.SourceFolder
             Version = $Version
-            BinaryFile = $BinaryFile
             ArchiveFile = $ArchiveFile
         })
-        New-Item -Path "$($Settings.DistFolder)\$_" -ItemType Directory -ErrorAction Stop | Out-Null
     }
-}
-
-task Build_App_x32 {
-    $BuildParams = $Settings.BuildParams.win32
-    Write-Output "Generating  $($BuildParams.BinaryFile) v$($BuildParams.Version) (x86)"
-    Invoke-ps2exe -inputFile "$($BuildParams.SourceFile)" -outputFile $BuildParams.BinaryFile -x86
-    $FailureMessage = 'ps2exe has build issue(s). Aborting build'
-    assert ( Test-Path $BuildParams.BinaryFile ) $FailureMessage
-}
-
-task Build_App_x64 {
-    $BuildParams = $Settings.BuildParams.win64
-    Write-Output "Generating  $($BuildParams.BinaryFile) v$($BuildParams.Version) (x64)"
-    Invoke-ps2exe -inputFile "$($BuildParams.SourceFile)" -outputFile $BuildParams.BinaryFile -x64
-    $FailureMessage = 'ps2exe has build issue(s). Aborting build'
-    assert ( Test-Path $BuildParams.BinaryFile ) $FailureMessage
+    New-Item -Path "$($Settings.DistFolder)" -ItemType Directory -ErrorAction Stop | Out-Null
 }
 
 task Build_Archive_x32 {
     $BuildParams = $Settings.BuildParams.win32
-    Write-Output "Compress Release File $($BuildParams.BinaryFile)"
-    $compress = @{
-        # waiting for issue#2 resolution
-        #Path             = $BuildParams.BinaryFile
-        Path             = $BuildParams.SourceFile
-        CompressionLevel = "Fastest"
-        DestinationPath  = $BuildParams.ArchiveFile
-    }
-    Compress-Archive @compress
+    Write-Output "Compress Release File $($BuildParams.ArchiveFile)"
+    Get-ChildItem -Path $BuildParams.SourceFiles -Exclude *.json |
+        Compress-Archive -DestinationPath $BuildParams.ArchiveFile -Update
     $FailureMessage = 'Archive has compress issue(s). Aborting build'
     assert ( Test-Path $BuildParams.ArchiveFile ) $FailureMessage
 }
 
 task Build_Archive_x64 {
     $BuildParams = $Settings.BuildParams.win64
-    Write-Output "Compress Release File $($BuildParams.BinaryFile)"
-    $compress = @{
-        # waiting for issue#2 resolution
-        #Path             = $BuildParams.BinaryFile
-        Path             = $BuildParams.SourceFile
-        CompressionLevel = "Fastest"
-        DestinationPath  = $BuildParams.ArchiveFile
-    }
-    Compress-Archive @compress
+    Write-Output "Compress Release File $($BuildParams.ArchiveFile)"
+    Get-ChildItem -Path $BuildParams.SourceFiles -Exclude *.json |
+        Compress-Archive -DestinationPath $BuildParams.ArchiveFile -Update
+
     $FailureMessage = 'Archive has compress issue(s). Aborting build'
     assert ( Test-Path $BuildParams.ArchiveFile ) $FailureMessage
 }
 
 
 task Build Build_Initialize,
-    Build_App_x32,
-    Build_App_x64,
     Build_Archive_x32,
     Build_Archive_x64 -if({ @("Release", "all") -contains $Configuration})
 

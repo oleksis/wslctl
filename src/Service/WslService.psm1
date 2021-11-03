@@ -20,6 +20,16 @@ Class WslService
 
         $this.defaultUsename = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultUsername
         $this.defaultPassword = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultPassword
+
+        $this._initialize()
+    }
+
+    [void] _initialize()
+    {
+        if (-Not (Test-Path -Path $this.Location))
+        {
+            New-Item -ItemType Directory -Force -Path $this.Location | Out-Null
+        }
     }
 
     [String] getLocation([String] $name)

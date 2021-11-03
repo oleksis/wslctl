@@ -21,7 +21,7 @@ using module ".\Controller\BackupController.psm1"
 using module ".\Controller\RegistryController.psm1"
 
 
-$version = "2.0.1"
+$version = "2.0.2"
 
 [ServiceLocator]::getInstance().add( 'config', [AppConfig]::new($version) )
 [ServiceLocator]::getInstance().add( 'registry', [RegistryService]::new() )

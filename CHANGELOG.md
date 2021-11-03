@@ -1,2 +1,2 @@
-* BUG: Hashtable call with Add
-* Prepare v2.0.1
+* BUG: Directorie 'instances' not created
+* Prepare v2.0.2

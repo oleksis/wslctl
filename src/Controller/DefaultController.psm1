@@ -11,12 +11,9 @@ using module "..\Tools\ExtendedConsole.psm1"
 
 Class DefaultController : AbstractController
 {
-    [String] $WslLocation
 
     DefaultController() : base()
     {
-        $Config = [AppConfig][ServiceLocator]::getInstance().get('config')
-        $this.WslLocation = $Config.Wsl.Location
     }
 
     [void] create([Array] $Arguments)

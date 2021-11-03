@@ -93,10 +93,22 @@ Class BuilderService
         )
         Write-Host "* $wslName created"
 
-        # Generate bash temp file & call exec
+        # Generate bash temp file
         $tempFile = Get-ChildItem ([IO.Path]::GetTempFileName()) | `
             Rename-Item -NewName { [IO.Path]::ChangeExtension($_, ".sh") } -PassThru
-        ($bashCmds -Join "`n") | Set-Content $tempFile
+
+        # Write Unix UTF8 files (no BOM)
+        $Utf8WithoutBom = New-Object System.Text.UTF8Encoding $false
+        $w = New-Object System.IO.StreamWriter @($tempFile, $false, $Utf8WithoutBom)
+        foreach ($line in $bashCmds) {
+            # normalize line breaks
+            $line = $line.Replace("`r`n", "`n").Replace("`r", "`n")
+            $w.Write($line)
+            $w.Write("`n")
+        }
+        $w.Close()
+
+        # Call exec
         $wslService.exec($wslName, $tempFile, @() )
 
         # remove temp file

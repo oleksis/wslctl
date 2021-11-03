@@ -29,20 +29,30 @@ Class DockerFile
         if ($this.commands) { return $this.commands }
 
         $this.commands = @{}
+        $line = ""
         Get-Content $this.path | ForEach-Object {
             # ignore blank and comment lines
             if ($_ -match "^\s*$") { Return }
             if ($_ -match "^\s*#") { Return }
 
-            $segments = $_ -Split " ", 2
+
+            if ( $_.trim().EndsWith('\'))
+            {
+                $line += $_.trim() -replace ".$";
+                Return
+            }
+            $line += $_.trim() -replace "`r",""
+
+            $segments = $line -Split " ", 2
             if ($segments.length -lt 2 -Or -Not ($instructions -contains $segments[0].ToLower()))
             {
-                Write-Host "Warning: Unsupported command '$_' (ignored)" -ForegroundColor Yellow
+                Write-Host "Warning: Unsupported command '$line' (ignored)" -ForegroundColor Yellow
+                $line = ""
                 Return
             }
 
             $segments[0] = $segments[0].ToLower()
-            switch ($segments[0].ToLower())
+            switch ($segments[0])
             {
                 { @('from') -contains $_ }
                 {
@@ -67,6 +77,7 @@ Class DockerFile
                     if ($segments[1] -match "^[a-zA-Z_].[a-zA-Z0-9_]+?=(`"|')[^`"']*?\1$" )
                     {
                         $this.commands += @{ "env" = $segments[1] }
+                        $line = ""
                         Return
                     }
 
@@ -78,6 +89,7 @@ Class DockerFile
                         {
                             # env test=true
                             $this.commands += @{ "env" = $segments[1] }
+                            $line = ""
                             Return
                         }
                         2
@@ -87,6 +99,7 @@ Class DockerFile
                             if ($invalid_members.length -eq 0)
                             {
                                 $this.commands += @{ "env" = $segments[1] }
+                                $line = ""
                                 Return
                             }
                             # env test true
@@ -102,6 +115,7 @@ Class DockerFile
                             {
                                 # env test=true key=value ...
                                 $this.commands += @{ "env" = $segments[1] }
+                                $line = ""
                                 Return
                             }
                             # env test this is the string of the test env value
@@ -118,6 +132,7 @@ Class DockerFile
                 }
 
             }
+            $line = ""
         }
         return $this.commands
     }
@@ -136,6 +151,7 @@ Class DockerFile
             "# The script is generated from a Dockerfile via wslctl v$version "
         )
         $bashEndOfHeader = @(
+            "`nset -e"
             "`n# -- Automatic change working directory:",
             "cd $pwdInWsl",
             "`n# -- Converted commands:"

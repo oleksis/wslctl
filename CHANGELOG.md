@@ -1,2 +1,3 @@
-* BUG: Directorie 'instances' not created
-* Prepare v2.0.2
+* Build: output shell file encoding (unix, utf8, no-BOM)
+* Build: multilines dockerfile commands escaped with "\"
+* Prepare v2.0.3

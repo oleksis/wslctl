@@ -162,7 +162,7 @@ Class WslService
     [int32] start([String] $name)
     {
         # warning: wsl binary always returns 0 even if no distribution exists
-        &  $this.Binary --distribution $name bash -c "nohup sleep 99999 </dev/null >/dev/null 2>&1 & sleep 1"
+        &  $this.Binary --distribution $name bash --login -c "nohup sleep 99999 </dev/null >/dev/null 2>&1 & sleep 1"
         return $LastExitCode
     }
 
@@ -280,7 +280,7 @@ Class WslService
 
     [Int32] connect([string]$name)
     {
-        return $this.exec($name, @("/bin/bash"))
+        return $this.exec($name, @("/bin/bash", "--login"))
     }
 
     [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs)

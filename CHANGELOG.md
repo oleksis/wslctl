@@ -1,3 +1,2 @@
-* Build: output shell file encoding (unix, utf8, no-BOM)
-* Build: multilines dockerfile commands escaped with "\"
-* Prepare v2.0.3
+* set login option for exec without arguments and start commands
+* Prepare v2.0.4

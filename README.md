@@ -21,6 +21,7 @@ It can deal with WSL1 and WSL2 instances (only if system is configured).
 - [x] build distribution from Dockerfile
 - [x] custom configuration file
 - [ ] rename instance
+- [ ] clone instance
 
 Registry Management
 
@@ -38,6 +39,7 @@ Backup Management
 - [x] remove backup by name
 - [x] restore backup by name
 - [x] restore confirmation when wsl instance already exists
+- [ ] restore with another name
 
 
 ## Install

@@ -69,8 +69,20 @@ Class DockerFile
                 }
                 arg
                 {
-                    $commands_args = $segments[1] -Split "=", 2
-                    if ($commands_args.length -eq 2) { $this.commands += @{ "arg" = $commands_args } }
+                    $commands_args = $segments[1] -Split "="
+                    $commands_length=$commands_args.length
+                    switch ($commands_length)
+                    {
+                        2
+                        {
+
+                            $this.commands += @{ "arg" = $segments[1] -replace ' *= *', '=' } ;
+                        }
+                        Default
+                        {
+                            Write-Host "Warning: ARG command length=$commands_length (ignored)" -ForegroundColor Yellow
+                        }
+                    }
                 }
                 env
                 {
@@ -151,7 +163,7 @@ Class DockerFile
             "# The script is generated from a Dockerfile via wslctl v$version "
         )
         $bashEndOfHeader = @(
-            "`nset -e"
+            "`nset -e",
             "`n# -- Automatic change working directory:",
             "cd $pwdInWsl",
             "`n# -- Converted commands:"
@@ -165,7 +177,7 @@ Class DockerFile
                 "from" { $this.bash += "# The Original DockerFile is from image : $values" }
                 "maintainer" { $this.bash += "# Original DockerFile Maintainer: $values" }
                 "run" { $this.bash += $bashEndOfHeader + "$values" ; $bashEndOfHeader = @() }
-                "arg" { $this.bash += $bashEndOfHeader + $values -Join "=" ; $bashEndOfHeader = @() }
+                "arg" { $this.bash += $bashEndOfHeader+ "$values"; $bashEndOfHeader = @() }
                 "env" { $this.bash += $bashEndOfHeader + "export $values" + "echo 'export $values'>> ~/.bashrc" ; $bashEndOfHeader = @() }
                 "user" { $this.bash += $bashEndOfHeader + "su - $values" ; $bashEndOfHeader = @() }
                 "copy" { $this.bash += $bashEndOfHeader + "cp $values" ; $bashEndOfHeader = @() }

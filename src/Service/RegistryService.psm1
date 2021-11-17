@@ -47,11 +47,18 @@ Class RegistryService
 
     [void] update()
     {
+        $tempFile = [IO.Path]::GetTempFileName()
+
         # Update the cache registry file (in cache)
-        if (-Not ([FileUtils]::copyWithProgress($this.Endpoint, $this.File)))
+        if (-Not ([FileUtils]::copyWithProgress($this.Endpoint, $tempFile)))
         {
+            if (Test-Path $tempFile -PathType leaf)
+            {
+                Remove-Item $tempFile
+            }
             throw "Registry endpoint not reachable"
         }
+        Move-Item -Path $tempFile -Destination $this.File -Force
     }
 
 

@@ -29,7 +29,7 @@ Registry Management
 - [x] local cache of distributions (pull)
 - [x] list/search of available distributions
 - [x] distributions informations (size, date, description)
-- [x] dowload integrity (sha256)
+- [x] download integrity (sha256)
 - [x] local cache cleanup
 
 Backup Management

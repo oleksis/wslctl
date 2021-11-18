@@ -32,6 +32,7 @@ Class BackupController : AbstractController
         Write-Host "$wslName backuped as $backupName "
         Write-Host "  archive $($backupProperties.archive)"
         Write-Host "  sha256: $($backupProperties.sha256)"
+        Write-Host "  size: $($backupProperties.size)"
         Write-Host "* Backup complete"
     }
 

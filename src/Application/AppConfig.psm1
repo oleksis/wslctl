@@ -19,5 +19,13 @@ Class AppConfig : JsonHashtableFile
         {
             $this.Add("registry", '\\qu1-srsrns-share.seres.lan\delivery\wsl\images')
         }
-    }
+     }
+
+     [System.Collections.IDictionaryEnumerator] GetEnumerator()
+     {
+         $data = $this.Clone()
+         $data.Remove('version')
+         $data.Remove('File')
+         return $data.GetEnumerator()
+     }
 }

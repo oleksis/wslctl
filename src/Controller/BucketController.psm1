@@ -50,7 +50,18 @@ Class BucketController : AbstractController
         $this._assertArgument( $Arguments, 0)
         [ExtendedConsole]::WriteColor( "Available buckets:", "Yellow")
         $this.bucketService.search("*") | ForEach-Object {
-            # colorize output
+            $name, $url = $_.Split(" ")
+            [ExtendedConsole]::WriteColor( @($name, $url), @("Green", "White"))
+        }
+    }
+
+    [void] search([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 1)
+        $pattern = $Arguments[0]
+
+        [ExtendedConsole]::WriteColor( "Available buckets from pattern '$pattern':", "Yellow")
+        $this.registryService.search($pattern) | ForEach-Object {
             $name, $url = $_.Split(" ")
             [ExtendedConsole]::WriteColor( @($name, $url), @("Green", "White"))
         }

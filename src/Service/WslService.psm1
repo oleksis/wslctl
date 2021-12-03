@@ -15,11 +15,13 @@ Class WslService
 
     WslService()
     {
-        $this.Binary = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.Binary
-        $this.Location = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.Location
+        $Config=([AppConfig][ServiceLocator]::getInstance().get('config'))
 
-        $this.defaultUsename = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultUsername
-        $this.defaultPassword = ([AppConfig][ServiceLocator]::getInstance().get('config')).Wsl.DefaultPassword
+        $this.Binary='c:\windows\system32\wsl.exe'
+        if ( $Config.ContainsKey("wsl")) { $this.Binary=$Config.wsl }
+        $this.Location = [FileUtils]::joinPath($Config.appData, "Instances")
+        $this.defaultUsename = "$env:UserName"
+        $this.defaultPassword = "ChangeMe"
 
         $this._initialize()
     }

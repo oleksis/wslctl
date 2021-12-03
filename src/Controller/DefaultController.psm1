@@ -330,7 +330,7 @@ Class DefaultController : AbstractController
     {
         $this._assertArgument( $Arguments, 0)
         # display software version
-        $version = ([AppConfig][ServiceLocator]::getInstance().get('config')).Version
+        $version = ([AppConfig][ServiceLocator]::getInstance().get('config')).version
         [ExtendedConsole]::WriteColor($version)
     }
 

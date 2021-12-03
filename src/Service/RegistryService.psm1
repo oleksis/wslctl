@@ -18,13 +18,13 @@ Class RegistryService
     {
         $Config = [AppConfig]([ServiceLocator]::getInstance().get('config'))
 
-        # Remote porperties
-        $this.Remote = $Config.Registry.Remote
-        $this.Endpoint = $Config.Registry.Endpoint
+         # Remote properties
+        $this.Remote = $Config.registry
+        $this.Endpoint = [FileUtils]::joinUrl($this.registry, "register.json")
 
         # Local Cache Properties
-        $this.Location = $Config.Registry.Location
-        $this.File = $Config.Registry.File
+        $this.Location = [FileUtils]::joinPath($Config.appData, "Registry")
+        $this.File = [FileUtils]::joinPath($this.Location, "register.json")
 
         $this._initialize()
     }

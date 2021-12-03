@@ -18,8 +18,8 @@ Class BackupService
     {
         $Config = [AppConfig][ServiceLocator]::getInstance().get('config')
 
-        $this.Location = $Config.Backup.Location
-        $this.File = $Config.Backup.File
+        $this.Location = [FileUtils]::joinPath($Config.appData, "Backups")
+        $this.File = [FileUtils]::joinPath($this.Location, "backups.json")
 
         $this._initialize()
     }

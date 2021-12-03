@@ -374,12 +374,14 @@ Class DefaultController : AbstractController
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl distribution registry commands:", $titleColor)
         @(
-            @("   registry set <remote_url>                        ", "Set the remote registry (custom configuratio file)"),
-            @("   registry update                                  ", "Update local distribution dictionary"),
+            @("   registry add    <name> <remote_url>              ", "Add a registry repository to list"),
+            @("   registry rm     <name>                           ", "Remove the registry repository from the list"),
+            @("   registry update                                  ", "Update distribution dictionary from registry repositories"),
             @("   registry pull   <distro>                         ", "Pull remote distribution to local registry"),
             @("   registry purge                                   ", "Remove all local registry content"),
             @("   registry search <distro_pattern>                 ", "Extract defined distributions from local registry"),
-            @("   registry ls                                      ", "List local registry distributions")
+            @("   registry ls                                      ", "List available distributions"),
+            @("   registry repositories                            ", "List defined registry repositories")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
 

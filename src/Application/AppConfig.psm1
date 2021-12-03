@@ -15,10 +15,6 @@ Class AppConfig : JsonHashtableFile
         {
             $this.Add("appData", [FileUtils]::joinPath($env:LOCALAPPDATA, "Wslctl") )
         }
-        if (-Not $this.ContainsKey("registry"))
-        {
-            $this.Add("registry", '\\qu1-srsrns-share.seres.lan\delivery\wsl\images')
-        }
      }
 
      [System.Collections.IDictionaryEnumerator] GetEnumerator()

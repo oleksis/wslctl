@@ -16,6 +16,27 @@ Class RegistryController : AbstractController
         $this.registryService = [RegistryService]([ServiceLocator]::getInstance().get('registry'))
     }
 
+    [void] add([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 2)
+        $registryName = $Arguments[0]
+        $remoteUrl = $Arguments[1]
+
+        [ExtendedConsole]::WriteColor( "Adding Registry $registryName -> $remoteUrl", "Yellow")
+        $this.registryService.add($registryName, $remoteUrl)
+        $this.registryService.commit()
+    }
+
+    [void] remove([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 1)
+        $registryName = $Arguments[0]
+
+        [ExtendedConsole]::WriteColor( "Removing Registry", "Yellow")
+        $this.registryService.remove($registryName)
+        $this.registryService.commit()
+    }
+
     [void] update([Array] $Arguments)
     {
         $this._assertArgument( $Arguments, 0)
@@ -23,16 +44,17 @@ Class RegistryController : AbstractController
         Write-Host "* Local registry updated"
     }
 
-    [void] set([Array] $Arguments)
+    [void] repositories([Array] $Arguments)
     {
-        $this._assertArgument( $Arguments, 1)
-        [ExtendedConsole]::WriteColor( "Setting Registry Remote Base Url", "Yellow")
-        $remoteUrl = $Arguments[0]
-        $config = [AppConfig]([ServiceLocator]::getInstance().get('config'))
-        $config.UserConfig.registry = $remoteUrl
-        $config.commit()
+        $this._assertArgument( $Arguments, 0)
+        [ExtendedConsole]::WriteColor( "Configured registry List:", "Yellow")
+        $this.registryService.registryList() | ForEach-Object {
+            # colorize output
+            $fname, $infos = $_.Split(" ")
+            $finfo = $infos -Join " "
+            [ExtendedConsole]::WriteColor( @($fname, $finfo), @("Green", "White"))
+        }
     }
-
 
     [void] list([Array] $Arguments)
     {
@@ -82,4 +104,6 @@ Class RegistryController : AbstractController
         $this.registryService.purge()
         Write-Host "* Local registry cache cleared"
     }
+
+
 }

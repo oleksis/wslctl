@@ -12,18 +12,21 @@ using module ".\Application\AppConfig.psm1"
 using module ".\Application\ControllerManager.psm1"
 
 using module ".\Service\BuilderService.psm1"
+using module ".\Service\BucketService.psm1"
 using module ".\Service\RegistryService.psm1"
 using module ".\Service\BackupService.psm1"
 using module ".\Service\WslService.psm1"
 
 using module ".\Controller\DefaultController.psm1"
 using module ".\Controller\BackupController.psm1"
+using module ".\Controller\BucketController.psm1"
 using module ".\Controller\RegistryController.psm1"
 
 
 $version = "2.0.5"
 
 [ServiceLocator]::getInstance().add( 'config', [AppConfig]::new($version) )
+[ServiceLocator]::getInstance().add( 'bucket', [BucketService]::new() )
 [ServiceLocator]::getInstance().add( 'registry', [RegistryService]::new() )
 [ServiceLocator]::getInstance().add( 'backup', [BackupService]::new() )
 [ServiceLocator]::getInstance().add( 'builder', [BuilderService]::new() )
@@ -34,6 +37,7 @@ $version = "2.0.5"
 [ControllerManager]::new(@(
     [DefaultController]::new(),
     [BackupController]::new(),
+    [BucketController]::new(),
     [RegistryController]::new()
 )).run( $args )
 

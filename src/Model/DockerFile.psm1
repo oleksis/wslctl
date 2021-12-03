@@ -180,7 +180,7 @@ Class DockerFile
                 "arg" { $this.bash += $bashEndOfHeader+ "$values"; $bashEndOfHeader = @() }
                 "env" { $this.bash += $bashEndOfHeader + "export $values" + "echo 'export $values'>> ~/.bashrc" ; $bashEndOfHeader = @() }
                 "user" { $this.bash += $bashEndOfHeader + "su - $values" ; $bashEndOfHeader = @() }
-                "copy" { $this.bash += $bashEndOfHeader + "cp $values" ; $bashEndOfHeader = @() }
+                "copy" { $this.bash += $bashEndOfHeader + "cp -R $values" ; $bashEndOfHeader = @() }
                 Default { Write-Host "Warning: Unimplemented command '$_' (ignored)" -ForegroundColor Yellow }
             }
         }

@@ -63,7 +63,6 @@ Class DefaultController : AbstractController
         )
 
         Write-Host "* $wslName created"
-        Write-Host "  Could be started with command: wslctl start $wslName"
     }
 
 

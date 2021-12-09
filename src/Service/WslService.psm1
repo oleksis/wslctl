@@ -92,14 +92,14 @@ Class WslService
         & $this.Binary --import $name $dir $archive --version $version
         if ($LastExitCode -ne 0)
         {
-            throw "Could nor create '$name' instance"
+            throw "Could not create '$name' instance"
         }
 
         # Adjust Wsl Distro Name
         & $this.Binary --distribution $name sh -c "echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
         if ($LastExitCode -ne 0)
         {
-            throw "Could nor set '$name' /lib/init/wsl-distro-name.sh"
+            throw "Could not set '$name' /lib/init/wsl-distro-name.sh"
         }
         $returnCode = 0
         if ($createDefaultUser)

@@ -1,3 +1,6 @@
+v2.1.1:
+* [EVOL] download does not return boolean
+
 v2.1.0:
 * [EVOL] add creation date and image to wsl list
 * [EVOL] create switch distrib and name from cli

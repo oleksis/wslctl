@@ -2,6 +2,7 @@
 using module "..\Application\AppConfig.psm1"
 using module "..\Application\ServiceLocator.psm1"
 using module "..\Tools\FileUtils.psm1"
+using module "..\Model\JsonHashtableFile.psm1"
 
 
 Class WslService
@@ -9,20 +10,24 @@ Class WslService
 
     [String] $Binary
     [String] $Location
+    [String] $File
     [String] $defaultUsename
     [String] $defaultPassword
+
+    [JsonHashtableFile] $Instances
 
 
     WslService()
     {
-        $Config=([AppConfig][ServiceLocator]::getInstance().get('config'))
+        $Config = ([AppConfig][ServiceLocator]::getInstance().get('config'))
 
-        $this.Binary='c:\windows\system32\wsl.exe'
-        if ( $Config.ContainsKey("wsl")) { $this.Binary=$Config.wsl }
+        $this.Binary = 'c:\windows\system32\wsl.exe'
+        if ( $Config.ContainsKey("wsl")) { $this.Binary = $Config.wsl }
         $this.Location = [FileUtils]::joinPath($Config.appData, "Instances")
         $this.defaultUsename = "$env:UserName"
         $this.defaultPassword = "ChangeMe"
 
+        $this.File = [FileUtils]::joinPath($Config.appData, "wsl-instances.json")
         $this._initialize()
     }
 
@@ -34,10 +39,19 @@ Class WslService
         }
     }
 
+    [void] _loadFile()
+    {
+        if (-Not $this.Instances)
+        {
+            $this.Instances = [JsonHashtableFile]::new($this.File, @{})
+        }
+    }
+
     [String] getLocation([String] $name)
     {
         return  [FileUtils]::joinPath($this.Location, $name)
     }
+
 
     [void] checkBeforeImport([String] $name) { $this.checkBeforeImport($name, $false) }
     [void] checkBeforeImport([String] $name, [Boolean] $forced)
@@ -71,8 +85,8 @@ Class WslService
 
     }
 
-    [Int32] import ([String] $name, [String] $archive) { return $this.import($name, $archive, -1, $false) }
-    [Int32] import ([String] $name, [String] $archive, [int] $version, [Boolean]$createDefaultUser)
+    [Int32] import ([String] $name, [String] $from, [String] $archive) { return $this.import($name, $from, $archive, -1, $false) }
+    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser)
     {
         if (($version -lt 1) -or ($version -gt 2))
         {
@@ -102,6 +116,14 @@ Class WslService
             throw "Could not set '$name' /lib/init/wsl-distro-name.sh"
         }
         $returnCode = 0
+
+        $this._loadFile()
+        $this.Instances.Add($name, @{
+                image    = $from
+                creation = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
+            })
+        $this.Instances.commit()
+
         if ($createDefaultUser)
         {
             $commandLine = @(
@@ -137,15 +159,26 @@ Class WslService
         $backupSize = [FileUtils]::getHumanReadableSize($backupTgz).Size
         $version = $this.version($name)
 
+        $this._loadFile()
+        $image = $null
+        $creation = $null
+        if ($this.Instances.ContainsKey($name))
+        {
+            $image = $this.Instances.$name.image
+            $creation = $this.Instances.$name.creation
+        }
+
         # Finally append backup to the register
         $backupdate = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
         return @{
             wslname    = $name
+            image      = $image
             wslversion = $version
             archive    = $backupTgz
             sha256     = $backupHash
             size       = $backupSize
             date       = $backupdate
+            creation   = $creation
         }
     }
 
@@ -219,11 +252,31 @@ Class WslService
         # console's (OEM) code page.
         $prev = [Console]::OutputEncoding;
         [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-
         $result = (& $this.Binary --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
-
         [Console]::OutputEncoding = $prev
-        return $result
+        $this._loadFile()
+
+        $final = @()
+        $final += $result.GetEnumerator() | ForEach-Object {
+            $matches = $null
+            $default = " "
+            $name = $_
+            $from = "-"
+            $creation = "-"
+
+            if ("$_" -match "^(?<name>[^ ]*) (?<default>.*)$")
+            {
+                $default = "*"
+                $name = $matches['name'].Trim()
+            }
+            if ($this.Instances.ContainsKey($name))
+            {
+                $from = $this.Instances.$name.image
+                $creation = $this.Instances.$name.creation
+            }
+            "{0,1} {1,-23}   {2,-20}   {3,1}" -f $default, $name, $creation, $from
+        }
+        return $final
     }
 
     [String] status([String] $name)
@@ -275,6 +328,14 @@ Class WslService
         {
             throw "Enable to remove '$name' instance"
         }
+        $this._loadFile()
+        if ($this.Instances.ContainsKey($name))
+        {
+            write-host "Remove '$name'"
+            $this.Instances.Remove($name)
+            $this.Instances.commit()
+        }
+
         $dir = $this.getLocation([String] $name)
         Remove-Item -LiteralPath $dir -Force -Recurse -ErrorAction Ignore | Out-Null
         return $LastExitCode

@@ -87,6 +87,7 @@ Class BuilderService
         Write-Host "Create wsl instance '$wslName' (wsl-version: $wslVersion)..."
         $wslService.import(
             $wslName,
+            $File.from,
             $archive,
             $wslVersion,
             $false

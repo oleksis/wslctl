@@ -75,7 +75,7 @@ Class BackupService
 
         $backupName = $this._generateName($wslName)
         $exportHashtable = $wslService.export( $wslName, $backupName )
-        $exportHashtable.message = $backupAnnotation
+        $exportHashtable.description = $backupAnnotation
         $destination = [FileUtils]::joinPath($this.Location, $exportHashtable.archive)
         Move-Item -Path $exportHashtable.archive -Destination $destination -Force
 
@@ -108,7 +108,7 @@ Class BackupService
             if ($_.Key -match ".*$pattern.*")
             {
                 "{0,-28} - {1,1} - {2,15} - {3,1}" -f $_.Key, $_.Value.date, `
-                    $_.Value.size, $_.Value.message
+                    $_.Value.size, $_.Value.description
             }
         } | Sort-Object
         return $result
@@ -151,6 +151,7 @@ Class BackupService
 
         if ($wslService.import(
                 $wslName,
+                $this.Hashtable.$backupName.image,
                 $backupTgzLocation,
                 $this.Hashtable.$backupName.wslversion,
                 $false

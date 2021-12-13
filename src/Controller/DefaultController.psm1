@@ -61,6 +61,7 @@ Class DefaultController : AbstractController
         Write-Host "Create wsl instance '$wslName' (wsl-version: $wslVersion)..."
         $wslService.import(
             $wslName,
+            $distroName,
             $archive,
             $wslVersion,
             $createUser
@@ -163,9 +164,12 @@ Class DefaultController : AbstractController
         Write-Host "Wsl instances:" -ForegroundColor Yellow
         $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
         $wslService.list() | ForEach-Object {
-            ((" " * 2), $_ ) -Join ""
-        } | Sort-Object | ForEach-Object {
-            [ExtendedConsole]::WriteColor( $_, "White")
+            "$_" -match "^(?<default>[*| ]*)(?<distro>[^ ]*)(?<infos>.*)$"
+            [ExtendedConsole]::WriteColor( @(
+                    $matches['default'],
+                    $matches['distro'],
+                    $matches['infos']),
+                @("White", "Green", "White"))
         }
     }
 

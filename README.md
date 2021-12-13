@@ -12,7 +12,7 @@ It can deal with WSL1 and WSL2 instances (only if system is configured).
 
 - [x] manage (set/get) default wsl version
 - [x] halt wsl windows service (shutdown all instances)
-- [x] create/remove/list wsl instances
+- [x] create/remove/list wsl instances (extended infos)
 - [x] default user creation on new instance with sudo capabilities (username/pwd configurable)
 - [x] start/stop/status wsl instance (backgroud)
 - [x] instance version convertion (v1 <-> v2)
@@ -31,6 +31,7 @@ Registry Management
 - [x] distributions informations (size, date, description)
 - [x] download integrity (sha256)
 - [x] local cache cleanup
+- [x] multi repository management
 
 Backup Management
 
@@ -50,16 +51,23 @@ There are many options :
 - download a specific version from gitlab releases and extract to a directory of your choice (manualy updatable)
 - **prefered**: install via scoop.sh (non admin) with my buckets ([mbl-35/scoop-srsrns](https://github.com/mbl-35/scoop-srsrns))
 
-> Remember to add the resulting directory to your windows `%PATH%`
+> Remember to add the resulting directory to your windows `%PATH%` for a non scoop installation
 
 ### Configuration
 
-The tool has a default configuration set, but with a private registry endpoint location (mine).
+The tool has no default configuration set. We need first to add repositories to the registry.
 You should at least change that value with the following command:
 
 ```bash
-PS> wslctl registry set <registry-base-endpoint>
+PS> wslctl registry add <name> <registry-base-endpoint>
 ```
+
+Example
+
+```bash
+PS> wslctl registry add main https://your.repository.target
+```
+
 
 The custom configuration file is a json file named `wslctl.json` located next to the cmd file.
 
@@ -68,7 +76,6 @@ Supported configuration parameters :
 | Name     | Description                       | Default Value                                           |
 | ---      | ---                               | ---                                                     |
 | wsl      | wsl binary location               |  "c:\\windows\\system32\\wsl.exe"                       |
-| registry | remote or local registry endpoint | "\\\\qu1-srsrns-share.seres.lan\\delivery\\wsl\\images" |
 | appData  | where to store everythings        | "`{$env:LOCALAPPDATA}`\\Wslctl"                         |
 
 
@@ -78,15 +85,15 @@ Get the registry URL and type folloging commands:
 
 ```powershell
 # get metadata from registry:
-PS> wslctl registry set <registry-base-endpoint>
+PS> wslctl registry add main <registry-base-endpoint>
 PS> wslctl registry update
 # optionnal
 PS> wslctl version default 2
 # create wsl instance
-PS> wslctl create ubuntu-20.04
+PS> wslctl create srsrns/ubuntu:20.04
 ```
 
-> You will have a fresh ubuntu focal install with your windows user name as default user
+> You will have a fresh ubuntu focal named `ubuntu-20.04` install with your windows user name as default user
 
 More commands to demonstrate the backup / restore functionalities :
 
@@ -129,7 +136,7 @@ PS> wslctl --help
 
 ### Wsl managment commands
 ```bash
-   create  <wsl_name> [<distro_name>] [|--v[1|2]]  Create a named wsl instance from distribution
+   create  <distro_name> [<wsl_name>] [|--v[1|2]]   Create a named wsl instance from distribution
    convert <wsl_name> <version>                     Concert instance to specified wsl version
    rm      <wsl_name>                               Remove a wsl instance by name
    exec    <wsl_name> [|<file.sh>|<cmd>]            Execute specified script|cmd on wsl instance by names
@@ -144,8 +151,9 @@ PS> wslctl --help
 
 ### Wsl distribution registry commands
 ```bash
-   registry set <remote_url>                        Set the remote registry (custom configuratio file)
-   registry update                                  Update local distribution dictionary
+   registry add    <name> <remote_url>              Add a registry repository to list
+   registry rm     <name>                           Remove the registry repository from the list
+   registry update                                  Update distribution dictionary from registry repositories
    registry pull   <distro>                         Pull remote distribution to local registry
    registry purge                                   Remove all local registry content
    registry search <distro_pattern>                 Extract defined distributions from local registry
@@ -154,7 +162,7 @@ PS> wslctl --help
 
 ### Wsl backup managment commands
 ```bash
-   backup create  <wsl_name> <message>              Create a new backup for the specified wsl instance
+   backup create  <wsl_name> <description>          Create a new backup for the specified wsl instance
    backup rm      <backup_name>                     Remove a backup by name
    backup restore <backup_name> [--force]           Restore a wsl instance from backup
    backup search  <backup_pattern>                  Find a created backup with input as pattern
@@ -261,117 +269,175 @@ me@host:/mnt/c/Users/me/home/github/wslctl$
 
 # Registry
 
-The registry is a remote or local repository to store retrivable distributions archives, and distributions metadatas.
+The registry is a list of remote or local repository to store retrivable distributions archives, and distributions metadatas.
 There is no public registry repository (right now), because of probably sensitive informations stored in
 customized entity (or business) resulting distributions.
 
-For now, only one registry is allowed (otherwise, we have to manage more than a file to retrive distributions metadata).
 
 The registry `endpoint` represents the registry base Url (ability to be in the local filesystem). Under that endpoint,
-we have the metadata file definition (named `registry.json`), and all the downloadable distributions files.
+we have the metadata file definition (named `register.json`), and all the downloadable distributions files.
 
-`wslctl` manage a local cache of all downloaded file from the registry endpoint (stored in the `Registry` subdirectory
+`wslctl` manage a local cache of all downloaded file from registry endpoints (stored in the `Registry` subdirectory
 of the user configuration parameter `appData`).
 
 ## Registry Metadatas
 
-Content of the `registry.json` file: a hashtable of named distribution associated with its properties.
+Content of the `register.json` file: a hashtable of named distribution associated with its properties.
 
 Distributions properties :
 
 | Field | Description | Example |
 | --- | --- | --- |
-| date     | Date of distribution production                           | 2021/09/04 14:09:00  |
-| message  | Distribution description                                  | Official Archived Version",
-| archive  | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz |
-| sha256   | Archive integrity checksum (sha256)                       | 93ac63df1badf4642e0d6074ca3d31866b8fc2a7ed386460db0b915eaf447b94 |
-| size     | Archive size (human readable format)                      | 230,10 MB |
+| date        | Date of distribution production                           | 2021/09/04 14:09:00  |
+| desciption  | Distribution description                                  | Official Archived Version",
+| archive     | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz |
+| sha256      | Archive integrity checksum (sha256)                       | 93ac63df1badf4642e0d6074ca3d31866b8fc2a7ed386460db0b915eaf447b94 |
+| size        | Archive size (human readable format)                      | 230,10 MB |
 
 
 ## Endpoint Implementation Example
 
-Lets see a private samba repository endpoint `\\share.domain.lan\wsl\registry`
+Lets see a private repository endpoints `<domain>/canonical` and `<domain>/extras`
 
 - Remote Filesystem Structure
 
     ```bash
-    smbuser@share.domain.lan:/samba-share/wsl/registry# ls -al
-    total 5604064
-    drwxr-x--- 2 smbuser smbuser       4096 oct.  13 18:27 .
-    drwx------ 3 smbuser smbuser         20 juil. 26 11:39 ..
-    -rw------- 1 smbuser smbuser  190632231 juin  11 07:53 ms-ubuntu-14.04.5.3-server-cloudimg-amd64-wsl-rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  236797902 juin  11 07:53 ms-ubuntu-16.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  231179584 mai   22  2019 ms-ubuntu-18.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  452534052 avril 23  2020 ms-ubuntu-20.04-server-cloudimg-amd64-wsl-rootfs.tar.gz
-    -rw------- 1 smbuser smbuser       3508 oct.  13 19:43 register.json
-    -rw------- 1 smbuser smbuser  241273494 oct.   4 14:09 ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  255534562 juin  11 10:18 ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  289440282 juin  11 10:18 ubuntu-18.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
-    -rw------- 1 smbuser smbuser  474855719 juin   9 09:20 ubuntu-20.04.2-server-cloudimg-amd64-wsl.rootfs.tar.gz
+    .
+    ├── canonical
+    │   ├── ms-ubuntu
+    │   │   ├── 14.04
+    │   │   │   ├── ms-ubuntu-14.04.5.3-server-cloudimg-amd64-wsl-rootfs.tar.gz
+    │   │   │   └── ms-ubuntu-14.04.6-server-cloudimg-amd64-wsl-rootfs.tar.gz
+    │   │   ├── 16.04
+    │   │   │   └── release-2019.523
+    │   │   │       └── ms-ubuntu-16.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz
+    │   │   ├── 18.04
+    │   │   │   └── ms-ubuntu-18.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz
+    │   │   └── 20.04
+    │   │       └── ms-ubuntu-20.04-server-cloudimg-amd64-wsl-rootfs.tar.gz
+    │   ├── register.json
+    │   └── ubuntu
+    │       ├── 16.04
+    │       │   ├── release-20210429
+    │       │   │   └── ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
+    │       │   └── release-20211001
+    │       │       └── ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
+    │       ├── 18.04
+    │       │   └── release-20211122
+    │       │       └── ubuntu-18.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
+    │       ├── 20.04
+    │       │   └── release-20211118
+    │       │       └── ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz
+    │       └── url.txt
+    └─ extras
+        ├── register.json
+        └── wsl-vpnkit
+            └── 0.2.4
+                └── wsl-vpnkit-0.2.4.tar.gz
     ```
 
-- **The corresponding `registry.json` file**
+- **The corresponding `~/extras/register.json` file**
 
     ```json
     {
-        "ubuntu-14.04.5":  {
-            "date":     "2021/09/04 14:09:00",
-            "message":  "Official Archived Version",
-            "archive":  "ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz",
-            "sha256":   "93ac63df1badf4642e0d6074ca3d31866b8fc2a7ed386460db0b915eaf447b94",
-            "size":     "230,10 MB"
-        },
-        "ubuntu-16.04":  {
-            "date":     "2021/06/11 10:18:00",
-            "message":  "Official Archived Version",
-            "archive":  "ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
-            "sha256":   "d26d46f5460cbd7bcdbd2a0676831bcd25773ef2f2fdf270aafd34bba2d0db00",
-            "size":     "243,70 MB"
-        },
-        "ubuntu-18.04":  {
-            "date":     "2021/06/11 10:18:00",
-            "message":  "Official Ubuntu Version",
-            "archive":  "ubuntu-18.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
-            "sha256":   "2f330a6c0f04de13cb209080c3011b4eb4ac7a73d49d308d4aefd737900f0598",
-            "size":     "276,03 MB"
-        },
-        "ubuntu-20.04.2":  {
-            "date":     "2021/06/09 09:20:00",
-            "message":  "Official Ubuntu Version",
-            "archive":  "ubuntu-20.04.2-server-cloudimg-amd64-wsl.rootfs.tar.gz",
-            "sha256":   "2d746fff7776cc8b71fc820984b95ae9aad896fd6ae6e666ab523e2a596b2b45",
-            "size":     "452,86 MB"
-        },
-
-
-        "ms-ubuntu-14.04.5":  {
-            "date":     "2021/06/11 07:53:00",
-            "message":  "Official Archived Version",
-            "archive":  "ms-ubuntu-14.04.5.3-server-cloudimg-amd64-wsl-rootfs.tar.gz",
-            "sha256":   "ff38b4c393260d1a282c0987005de5d2704d94979f247c90d548e85badcff673",
-            "size":     "181,80 MB"
-        },
-        "ms-ubuntu-16.04.2":  {
-            "date":     "2021/06/11 07:53:00",
-            "message":  "Official Archived Version",
-            "archive":  "ms-ubuntu-16.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz",
-            "sha256":   "247314273c421a9c9ab11951ca4543ca2297d2fb557887a9a8948d1295794a91",
-            "size":     "225,83 MB"
-        },
-        "ms-ubuntu-18.04.2":  {
-            "date":     "2019/05/22 12:00:00",
-            "message":  "Official Store Version Officielle",
-            "archive":  "ms-ubuntu-18.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz",
-            "sha256":   "7d220d798b75769d774358677b4cdb1ee556129f64005587dbe9ea8d50b38bd2",
-            "size":     "220,47 MB"
-        },
-        "ms-ubuntu-20.04":  {
-            "date":     "2020/04/23 12:00:00",
-            "message":  "Official Store Version Officielle",
-            "archive":  "ms-ubuntu-20.04-server-cloudimg-amd64-wsl-rootfs.tar.gz",
-            "sha256":   "9d286bf63f963fbcea20ce6ffb56e8e81be8cd47e50d4aaeae717c18abe78066",
-            "size":     "431,57 MB"
+        "extras/wsl-vpnkit:0.2.4": {
+            "source":       "https://github.com/sakai135/wsl-vpnkit/releases/download/v0.2.4/wsl-vpnkit.tar.gz",
+            "date":         "2021/11/29 13:35:00",
+            "description":  "Official VPN-Kit Cisco Bridge (sakai135)",
+            "note":         "See: https://github.com/sakai135/wsl-vpnkit",
+            "archive":      "wsl-vpnkit/0.2.4/wsl-vpnkit-0.2.4.tar.gz",
+            "sha256":       "d4fbf1e7ae57b28a046b0515adbdab06914cd7a80d1ecd0b4a0b06c2b14743ad",
+            "size":         "11.50 MB"
         }
+    }
+    ```
+
+
+- **The corresponding `~/canonical/register.json` file**
+
+    ```json
+    {
+    "ms-ubuntu:14.04.5": {
+        "source": "https://wsldownload.azureedge.net/14.04.5.3-server-cloudimg-amd64-root.tar.gz",
+        "date": "2021/06/11 07:53:00",
+        "description": "Official Microsoft Archived Ubuntu Server 14.04 LTS (Trusty Tahr) release",
+        "note": "Issues with initctl, policy-rc.d and tail",
+        "archive": "ms-ubuntu/14.04/ms-ubuntu-14.04.5.3-server-cloudimg-amd64-wsl-rootfs.tar.gz",
+        "sha256": "ff38b4c393260d1a282c0987005de5d2704d94979f247c90d548e85badcff673",
+        "size": "181.80 MB"
+    },
+    "ms-ubuntu:14.04.6": {
+        "source": "Updated from ms-ubuntu:14.04.5",
+        "date": "2021/09/04 14:09:00",
+        "description": "Official Microsoft Archived Ubuntu Server 14.04 LTS (Trusty Tahr) Patched release",
+        "note": "Patched and updated",
+        "archive": "ms-ubuntu/14.04/ms-ubuntu-14.04.6-server-cloudimg-amd64-wsl-rootfs.tar.gz",
+        "sha256": "16daf3303bd416349daff2120b4a53ffedea18b490c217944f9f08777bafeca6",
+        "size": "228.63 MB"
+    },
+    "ms-ubuntu:16.04.2": {
+        "source": "https://wsldownload.azureedge.net/16.04.2-server-cloudimg-amd64-root.tar.gz",
+        "date": "2021/06/11 07:53:00",
+        "description": "Official Microsoft Archived Ubuntu Server 16.04 (Xenial Xerus) release",
+        "note": "",
+        "archive": "ms-ubuntu/16.04/release-2019.523/ms-ubuntu-16.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz",
+        "sha256": "247314273c421a9c9ab11951ca4543ca2297d2fb557887a9a8948d1295794a91",
+        "size": "225.82 MB"
+    },
+    "ms-ubuntu:18.04.2": {
+        "source": "https://wsldownload.azureedge.net/Ubuntu_1804.2019.522.0_x64.appx",
+        "date": "2019/05/22 12:00:00",
+        "description": "Official Microsoft Ubuntu Server 18.04 (Bionic Beaver) release [2019.522]",
+        "note": "Extracted from downloaded appx",
+        "archive": "ms-ubuntu/18.04/ms-ubuntu-18.04.2-server-cloudimg-amd64-wsl-rootfs.tar.gz",
+        "sha256": "7d220d798b75769d774358677b4cdb1ee556129f64005587dbe9ea8d50b38bd2",
+        "size": "220.47 MB"
+    },
+    "ms-ubuntu:20.04": {
+        "source": "https://wsldownload.azureedge.net/Ubuntu_2004.2020.424.0_x64.appx",
+        "date": "2020/04/23 12:00:00",
+        "description": "Official Microsoft Ubuntu Server 20.04 LTS (Focal Fossa) release [2020.424]",
+        "note": "Extracted from downloaded appx",
+        "archive": "ms-ubuntu/20.04/ms-ubuntu-20.04-server-cloudimg-amd64-wsl-rootfs.tar.gz",
+        "sha256": "9d286bf63f963fbcea20ce6ffb56e8e81be8cd47e50d4aaeae717c18abe78066",
+        "size": "431.57 MB"
+    },
+    "ubuntu:16.04.6": {
+        "source": "https://cloud-images.ubuntu.com/releases/xenial/release-20210429/ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "date": "2021/04/29 07:30:00",
+        "description": "Official Ubuntu Server 16.04 LTS (Xenial Xerus) release [20210429]",
+        "note": "",
+        "archive": "ubuntu/16.04/release-20210429/ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "sha256": "d26d46f5460cbd7bcdbd2a0676831bcd25773ef2f2fdf270aafd34bba2d0db00",
+        "size": "243.69 MB"
+    },
+    "ubuntu:16.04.7": {
+        "source": "https://cloud-images.ubuntu.com/releases/xenial/release-20211001/ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "date": "2021/10/02 07:30:00",
+        "description": "Official Ubuntu Server 16.04 LTS (Xenial Xerus) release [20211001]",
+        "note": "",
+        "archive": "ubuntu/16.04/release-20211001/ubuntu-16.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "sha256": "746bad563c891240c505c4955c4a134749db3ff9d9b0fa15ec6cab77518260ff",
+        "size": "244.92 MB"
+    },
+    "ubuntu:18.04.6": {
+        "source": "https://cloud-images.ubuntu.com/releases/bionic/release-20211122/ubuntu-18.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "date": "2021/11/23 07:00:00",
+        "description": "Official Ubuntu Server 18.04 LTS (Bionic Beaver) release [20211122]",
+        "note": "",
+        "archive": "ubuntu/18.04/release-20211122/ubuntu-18.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "sha256": "d31c23cfbfbc1fae7f46d9d96db1c1c63666d739e28139b52766b3c22f2db6dc",
+        "size": "278.78 MB"
+    },
+    "ubuntu:20.04.3": {
+        "source": "https://cloud-images.ubuntu.com/releases/focal/release-20211118/ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "date": "2021/11/08 22:42:00",
+        "description": "Official Ubuntu Server 20.04 LTS (Focal Fossa) release [20211118]",
+        "note": "",
+        "archive": "ubuntu/20.04/release-20211118/ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz",
+        "sha256": "6b88c529f44d4b0804ebf3ce5c4504df61dc0b114b9b3b82a01b44a7e4c5c6b1",
+        "size": "469.47 MB"
+    }
     }
     ```
 
@@ -379,23 +445,27 @@ Lets see a private samba repository endpoint `\\share.domain.lan\wsl\registry`
 
     ```powershell
     # get metadata from registry:
-    PS> wslctl registry set "\\share.domain.lan\wsl\registry"
+    PS> wslctl registry add main https://<domain>/canonical
+    PS> wslctl registry add extras https://<domain>/extras
     PS> wslctl registry update
 
     # list available distributions :
     PS> wslctl registry list
     Available distributions (installable):
-    ms-ubuntu-14.04.5           - 2021/06/11 07:53:00 -       181,80 MB - Official Archived Version
-    ms-ubuntu-16.04.2           - 2021/06/11 07:53:00 -       225,83 MB - Official Archived Version
-    ms-ubuntu-18.04.2           - 2019/05/22 12:00:00 -       220,47 MB - Official Store Version Officielle
-    ms-ubuntu-20.04             - 2020/04/23 12:00:00 -       431,57 MB - Official Store Version Officielle
-    ubuntu-14.04.5              - 2021/09/04 14:09:00 -       230,10 MB - Official Archived Version
-    ubuntu-16.04                - 2021/06/11 10:18:00 -       243,70 MB - Official Archived Version
-    ubuntu-18.04                - 2021/06/11 10:18:00 -       276,03 MB - Official Ubuntu Version
-    ubuntu-20.04.2              - 2021/06/09 09:20:00 -       452,86 MB - Official Ubuntu Version
+    extras/wsl-vpnkit:0.2.4     [extras]       2021/11/29 13:35:00     11.50 MB   Official VPN-Kit Cisco Bridge (sakai135)
+    ms-ubuntu:14.04.5           [main]         2021/06/11 07:53:00    181.80 MB   Official Microsoft Archived Ubuntu Server 14.04 LTS (Trusty Tahr) release
+    ms-ubuntu:14.04.6           [main]         2021/09/04 14:09:00    228.63 MB   Official Microsoft Archived Ubuntu Server 14.04 LTS (Trusty Tahr) Patched release
+    ms-ubuntu:16.04.2           [main]         2021/06/11 07:53:00    225.82 MB   Official Microsoft Archived Ubuntu Server 16.04 (Xenial Xerus) release
+    ms-ubuntu:18.04.2           [main]         2019/05/22 12:00:00    220.47 MB   Official Microsoft Ubuntu Server 18.04 (Bionic Beaver) release [2019.522]
+    ms-ubuntu:20.04             [main]         2020/04/23 12:00:00    431.57 MB   Official Microsoft Ubuntu Server 20.04 LTS (Focal Fossa) release [2020.424]
+    ubuntu:16.04.6              [main]         2021/04/29 07:30:00    243.69 MB   Official Ubuntu Server 16.04 LTS (Xenial Xerus) release [20210429]
+    ubuntu:16.04.7              [main]         2021/10/02 07:30:00    244.92 MB   Official Ubuntu Server 16.04 LTS (Xenial Xerus) release [20211001]
+    ubuntu:18.04.6              [main]         2021/11/23 07:00:00    278.78 MB   Official Ubuntu Server 18.04 LTS (Bionic Beaver) release [20211122]
+    ubuntu:20.04.3              [main]         2021/11/08 22:42:00    469.47 MB   Official Ubuntu Server 20.04 LTS (Focal Fossa) release [20211118]
 
     # create instance with available distribution
-    PS> wslctl create ubuntu-20.04.2
+    PS> wslctl create ubuntu:20.04.3
+    PS> wslctl create extras/wsl-vpnkit:0.2.4
     ```
 
 # Backup / Restore
@@ -431,13 +501,13 @@ Distributions properties :
 
 | Field | Description | Example |
 | --- | --- | --- |
-| date     | Date of backup production                                 | 2021/09/04 14:09:00  |
-| message  | Backup description                                        | Retest oop |
-| archive  | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-bkp.01-amd64-wsl-rootfs.tar.gz |
-| sha256   | Archive integrity checksum (sha256)                       | df6ef87d8b449d039d49d94d9daa8b14ad34d23ce39f3d5e927b39d699a160ed |
-| size     | Archive size (human readable format)                      | 230,10 MB |
-| wslname | Instance name from wich the backup has been realized | ubuntu-14.04.5 |
-| wslversion | Wsl version of the backuped instance | 2 |
+| date         | Date of backup production                                 | 2021/09/04 14:09:00  |
+| description  | Backup description                                        | Retest oop |
+| archive      | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-bkp.01-amd64-wsl-rootfs.tar.gz |
+| sha256       | Archive integrity checksum (sha256)                       | df6ef87d8b449d039d49d94d9daa8b14ad34d23ce39f3d5e927b39d699a160ed |
+| size         | Archive size (human readable format)                      | 230,10 MB |
+| wslname      | Instance name from wich the backup has been realized | ubuntu-14.04.5 |
+| wslversion   | Wsl version of the backuped instance | 2 |
 
 The `backup list` command is based on that file :
 

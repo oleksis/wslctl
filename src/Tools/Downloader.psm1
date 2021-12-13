@@ -75,7 +75,8 @@ Class Downloader
 
         try
         {
-            return [Downloader]::downloadWithProgress($url, $to, $cookies, $progress)
+            [Downloader]::downloadWithProgress($url, $to, $cookies, $progress)
+            return $true
         }
         catch
         {
@@ -83,6 +84,7 @@ Class Downloader
             if ($e.innerexception) { $e = $e.innerexception }
             throw $e
         }
+        return $false
     }
 
     # download with filesize and progress indicator

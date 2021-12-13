@@ -70,32 +70,6 @@ Class FileUtils
 
     static [Boolean] copyWithProgress([String] $from, [String] $to)
     {
-        try{
-            [Downloader]::download($from, $to)
-            return $true
-        } catch
-        {
-            $formatstring = "{0} : {1}`n{2}`n" +
-                "    + CategoryInfo          : {3}`n" +
-                "    + FullyQualifiedErrorId : {4}`n"
-            $fields = $_.InvocationInfo.MyCommand.Name,
-                    $_.ErrorDetails.Message,
-                    $_.InvocationInfo.PositionMessage,
-                    $_.CategoryInfo.ToString(),
-                    $_.FullyQualifiedErrorId
-
-            $formatstring -f $fields
-
-            write-host -f darkred $_
-            write-host -f darkred "URL $from is not valid"
-
-        }
-        return $false
-    }
-
-
-    static [Boolean] copyWithProgressLocal([String] $from, [String] $to)
-    {
         $result = $true
         $ffile = $tofile = $null
 

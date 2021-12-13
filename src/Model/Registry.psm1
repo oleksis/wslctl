@@ -1,6 +1,7 @@
 
 using module "..\Application\ServiceLocator.psm1"
 using module "..\Tools\FileUtils.psm1"
+using module "..\Tools\Downloader.psm1"
 using module "..\Model\JsonHashtableFile.psm1"
 
 
@@ -48,7 +49,7 @@ Class Registry
         $tempFile = [IO.Path]::GetTempFileName()
 
         # Update the cache registry file (in cache)
-        if (-Not ([FileUtils]::copyWithProgress($this.Endpoint, $tempFile)))
+        if (-Not ([Downloader]::download($this.Endpoint, $tempFile)))
         {
             if (Test-Path $tempFile -PathType leaf)
             {
@@ -110,7 +111,7 @@ Class Registry
             $distroLocationParent = Split-Path $distroLocation -parent
             New-Item -ItemType Directory -Force -Path $distroLocationParent | Out-Null
 
-            if (-Not ([FileUtils]::copyWithProgress($distroEndpoint, $tempFile)))
+            if (-Not ([Downloader]::download($distroEndpoint, $tempFile)))
             {
                 throw "Registry endpoint not reachable"
             }

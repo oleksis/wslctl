@@ -72,8 +72,8 @@ Class Registry
             $result += $this.Distributions.GetEnumerator() | ForEach-Object {
                 if ($_.Key -match ".*$pattern.*")
                 {
-                    "{0,-28} - {1,-21} - {2,1} - {3,15} - {4,1}" -f $_.Key, $this.name, $_.Value.date, `
-                        $_.Value.size, $_.Value.message
+                    "{0,-28} {1,-12}   {2,1}   {3,10}   {4,1}" -f $_.Key, ("["+$this.name+"]"), $_.Value.date, `
+                        $_.Value.size, $_.Value.description
                 }
             } | Sort-Object
         }
@@ -101,23 +101,29 @@ Class Registry
 
         $distroEndpoint = [FileUtils]::joinUrl($this.Remote, $distroPackage)
         $distroLocation = [FileUtils]::joinPath($this.Location, $distroPackage)
+        $tempFile = [IO.Path]::GetTempFileName()
 
         # Check Distribution in cache or download it
         if (-Not (Test-Path -Path $distroLocation))
         {
-            if (-Not ([FileUtils]::copyWithProgress($distroEndpoint, $distroLocation)))
+            # assert directory exists (distro package could have sub directories)
+            $distroLocationParent = Split-Path $distroLocation -parent
+            New-Item -ItemType Directory -Force -Path $distroLocationParent | Out-Null
+
+            if (-Not ([FileUtils]::copyWithProgress($distroEndpoint, $tempFile)))
             {
                 throw "Registry endpoint not reachable"
             }
 
             # Check integrity
-            $distroLocationHash = [FileUtils]::sha256( $distroLocation )
+            $distroLocationHash = [FileUtils]::sha256( $tempFile )
             if (-Not ($distroLocationHash -eq $distroRealSha256))
             {
-                Remove-Item -Path $distroLocation -Force -ErrorAction Ignore | Out-Null
+                Remove-Item -Path $tempFile -Force -ErrorAction Ignore | Out-Null
                 throw "Error: Archive File integrity mismatch. Found '$distroLocationHash' - " +
                 "Removing  $distroLocation"
             }
+            Move-Item -Path $tempFile -Destination $distroLocation
         }
         return $distroLocation
     }

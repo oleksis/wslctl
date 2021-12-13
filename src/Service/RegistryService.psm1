@@ -59,9 +59,9 @@ Class RegistryService
     [void] add([String] $name, [String] $url)
     {
         $this._loadFile()
-        if (-Not ($name -imatch '^[a-z][a-z0-9]{4,20}$'))
+        if (-Not ($name -imatch '^[a-z][a-z0-9]{3,9}$'))
         {
-            throw "Invalid registry name format (5 char min, 20 max, [a-z0-9]*)"
+            throw "Invalid registry name format (4 char min, 10 max, [a-z0-9]*)"
         }
 
         try { [System.Net.WebRequest]::Create($url) }
@@ -96,7 +96,7 @@ Class RegistryService
 
         $result = @()
         $result += $this.Buckets.GetEnumerator() | ForEach-Object {
-                "{0,-21} - {1,1}" -f $_.Key, $_.Value
+                "{0,-10}   {1,1}" -f $_.Key, $_.Value
         } | Sort-Object
 
         return $result
@@ -135,12 +135,12 @@ Class RegistryService
     {
         $this._loadFile()
         $this._assertAvailableRegistries()
-        $foundRegistry = false
+        $foundRegistry = $false
 
         foreach ($registryName in $this.Registries.Keys)
         {
             $registry = [Registry]$($this.Registries.Item($registryName))
-            if ($registry.contains($distroName) )
+            if ( $registry.contains($distroName) )
             {
                 $foundRegistry = $registry
                 break;

@@ -38,13 +38,17 @@ Class DefaultController : AbstractController
                 --v2 { $wslVersion = 2 }
                 Default
                 {
-                    if ( $null -eq $wslName ) { $wslName = $element }
-                    elseif ( $null -eq $distroName ) { $distroName = $element }
+                    if ( $null -eq $distroName ) { $distroName = $element }
+                    elseif ( $null -eq $wslName ) { $wslName = $element }
                     else { throw "Invalid parameter" }
                 }
             }
         }
-        if ( $null -eq $distroName) { $distroName = $wslName }
+        #if ( $null -eq $distroName) { $distroName = $wslName }
+        if ( $null -eq $wslName) {
+            # convert <group>/<name>:x.y.z => <name>-x.y.z
+            $wslName = (Split-Path -Path $distroName -Leaf) -replace '[:_]', '-'
+        }
 
         Write-Host "* Import $wslName"
 
@@ -355,7 +359,7 @@ Class DefaultController : AbstractController
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl managment commands:", $titleColor)
         @(
-            @("   create  <wsl_name> [<distro_name>] [|--v[1|2]]  ", "Create a named wsl instance from distribution"),
+            @("   create  <distro_name> [<wsl_name>] [|--v[1|2]]   ", "Create a named wsl instance from distribution"),
             @("   convert <wsl_name> <version>                     ", "Concert instance to specified wsl version"),
             @("   rm      <wsl_name>                               ", "Remove a wsl instance by name"),
             @("   exec    <wsl_name> [|<file.sh>|<cmd>]            ", "Execute specified script|cmd on wsl instance by names"),
@@ -364,7 +368,7 @@ Class DefaultController : AbstractController
             @("   stop    <wsl_name>                               ", "Stop an instance by name"),
             @("   status [<wsl_name>]                              ", "List all or specified wsl Instance status"),
             @("   halt                                             ", "Shutdown all wsl instances"),
-            @("   version [|<wsl_name>|default [|<version>]]       ", "Set/get default version or get  wsl instances version"),
+            @("   version [|<wsl_name>|default [|<version>]]       ", "Set/get default version or get wsl instances version"),
             @("   build   [<Wslfile>] [--tag=<distro_name>]        ", "Build an instance (docker like)")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
@@ -388,7 +392,7 @@ Class DefaultController : AbstractController
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl backup managment commands:", $titleColor)
         @(
-            @("   backup create  <wsl_name> <message>              ", "Create a new backup for the specified wsl instance"),
+            @("   backup create  <wsl_name> <description>          ", "Create a new backup for the specified wsl instance"),
             @("   backup rm      <backup_name>                     ", "Remove a backup by name"),
             @("   backup restore <backup_name> [--force]           ", "Restore a wsl instance from backup"),
             @("   backup search  <backup_pattern>                  ", "Find a created backup with input as pattern"),

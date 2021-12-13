@@ -1,11 +1,12 @@
 using module ".\ExtendedConsole.psm1"
+using module ".\Downloader.psm1"
 
 Class FileUtils
 {
 
     static [String] sizeToHumanReadable([int64] $Size)
     {
-        if ($Size -gt 1TB) { return[string]::Format("{0:0.00} TB", $Size / 1TB) }
+        if ($Size -gt 1TB) { return [string]::Format("{0:0.00} TB", $Size / 1TB) }
         elseif ($Size -gt 1GB) { return [string]::Format("{0:0.00} GB", $Size / 1GB) }
         elseif ($Size -gt 1MB) { return [string]::Format("{0:0.00} MB", $Size / 1MB) }
         elseif ($Size -gt 1KB) { return [string]::Format("{0:0.00} kB", $Size / 1KB) }
@@ -68,6 +69,32 @@ Class FileUtils
     }
 
     static [Boolean] copyWithProgress([String] $from, [String] $to)
+    {
+        try{
+            [Downloader]::download($from, $to)
+            return $true
+        } catch
+        {
+            $formatstring = "{0} : {1}`n{2}`n" +
+                "    + CategoryInfo          : {3}`n" +
+                "    + FullyQualifiedErrorId : {4}`n"
+            $fields = $_.InvocationInfo.MyCommand.Name,
+                    $_.ErrorDetails.Message,
+                    $_.InvocationInfo.PositionMessage,
+                    $_.CategoryInfo.ToString(),
+                    $_.FullyQualifiedErrorId
+
+            $formatstring -f $fields
+
+            write-host -f darkred $_
+            write-host -f darkred "URL $from is not valid"
+
+        }
+        return $false
+    }
+
+
+    static [Boolean] copyWithProgressLocal([String] $from, [String] $to)
     {
         $result = $true
         $ffile = $tofile = $null

@@ -16,6 +16,7 @@ It can deal with WSL1 and WSL2 instances (only if system is configured).
 - [x] default user creation on new instance with sudo capabilities (username/pwd configurable)
 - [x] start/stop/status wsl instance (backgroud)
 - [x] instance version convertion (v1 <-> v2)
+- [x] manage default distribution
 - [x] remote execute commands/script
 - [x] bash to wsl instance
 - [x] build distribution from Dockerfile

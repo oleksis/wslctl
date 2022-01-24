@@ -1,5 +1,6 @@
 v2.1.2:
 * [EVOL] ability to create from archive file (for wslctl)
+* [ISSUE#12] setting default distribution
 
 v2.1.1:
 * [EVOL] download does not return boolean

@@ -300,6 +300,22 @@ Class WslService
 
     }
 
+    [String] getDefaultDistribution()
+    {
+        return (($this.statusAll() | Select-String -Pattern "\*" | Out-String).Trim()  -Split '[\*\s]+' |`
+            Where-Object { $_ } )[0]
+    }
+
+    [String] setDefaultDistribution([String] $name)
+    {
+        if (-Not $this.exists($name))
+        {
+            return -1
+        }
+
+        & $this.Binary --set-default $name
+        return $LastExitCode
+    }
 
     [String[]] statusAll()
     {

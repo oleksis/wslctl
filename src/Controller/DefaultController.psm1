@@ -47,7 +47,8 @@ Class DefaultController : AbstractController
             }
         }
 
-        if ($distroFileOrName.EndsWith('.tar.gz') -Or $distroFileOrName.EndsWith('.tgz') -Or $distroFileOrName.EndsWith('.tar')){
+        if ($distroFileOrName.EndsWith('.tar.gz') -Or $distroFileOrName.EndsWith('.tgz') -Or $distroFileOrName.EndsWith('.tar'))
+        {
             # Importing a tar file as distribution source
             # image version is in wslName argument
             if ( $null -eq $wslName) { throw "Invalid parameter: wslName mandatory" }
@@ -55,10 +56,13 @@ Class DefaultController : AbstractController
             $from = $wslName
             $wslName = (Split-Path -Path $wslName.SubString(0, $wslName.indexOf(':') ) -Leaf) -replace '[:_]', '-'
             $archive = $distroFileOrName
-        } else {
+        }
+        else
+        {
             $from = $distroFileOrName
             #if ( $null -eq $distroFileOrName) { $distroFileOrName = $wslName }
-            if ( $null -eq $wslName) {
+            if ( $null -eq $wslName)
+            {
                 # convert <group>/<name>:x.y.z => <name>-x.y.z
                 $wslName = (Split-Path -Path $distroFileOrName -Leaf) -replace '[:_]', '-'
             }
@@ -69,7 +73,8 @@ Class DefaultController : AbstractController
         Write-Host "Check import requirements ..."
         $wslService.checkBeforeImport($wslName)
 
-        if ( $null -eq $archive) {
+        if ( $null -eq $archive)
+        {
             Write-Host "Dowload distribution '$from' ..."
             $archive = $registryService.pull($from)
         }
@@ -280,6 +285,31 @@ Class DefaultController : AbstractController
     }
 
 
+    [void] default([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 0, 1)
+        $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
+
+        if ($Arguments.count -eq 0)
+        {
+            Write-Host $wslService.getDefaultDistribution()
+        }
+        else
+        {
+            $wslName = $Arguments[0]
+            if (-Not $wslService.exists($wslName))
+            {
+                throw "No instance named '$wslName' found"
+            }
+
+            if (  $wslService.setDefaultDistribution($wslName) -ne 0)
+            {
+                throw "Unable to set wsl default distribution to $wslName"
+            }
+            Write-Host "* wsl default distribution set to $wslName"
+        }
+    }
+
 
     [void] version([Array] $Arguments)
     {
@@ -310,7 +340,7 @@ Class DefaultController : AbstractController
             $wslDefaultVersion = $Arguments[1]
             if ( $wslService.setDefaultVersion($wslDefaultVersion) -ne 0)
             {
-                throw "Enable to set wsl default version to $wslDefaultVersion"
+                throw "Unable to set wsl default version to $wslDefaultVersion"
             }
             Write-Host "* wsl default version set to $wslDefaultVersion"
         }
@@ -389,6 +419,7 @@ Class DefaultController : AbstractController
             @("   status [<wsl_name>]                              ", "List all or specified wsl Instance status"),
             @("   halt                                             ", "Shutdown all wsl instances"),
             @("   version [|<wsl_name>|default [|<version>]]       ", "Set/get default version or get wsl instances version"),
+            @("   default [|<wsl_name>]                            ", "Set/get default distribution name"),
             @("   build   [<Wslfile>] [--tag=<distro_name>]        ", "Build an instance (docker like)")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 

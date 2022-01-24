@@ -18,13 +18,15 @@ Class DefaultController : AbstractController
 
     [void] create([Array] $Arguments)
     {
-        $this._assertArgument( $Arguments, 0, 3 )
+        $this._assertArgument( $Arguments, 0, 4 )
 
         $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
         $registryService = [RegistryService][ServiceLocator]::getInstance().get('registry')
 
         $wslName = $null
-        $distroName = $null
+        $distroFileOrName = $null
+        $from = $null
+        $archive = $null
         $wslVersion = $wslService.getDefaultVersion()
         $createUser = $true
 
@@ -38,16 +40,28 @@ Class DefaultController : AbstractController
                 --v2 { $wslVersion = 2 }
                 Default
                 {
-                    if ( $null -eq $distroName ) { $distroName = $element }
+                    if ( $null -eq $distroFileOrName ) { $distroFileOrName = $element }
                     elseif ( $null -eq $wslName ) { $wslName = $element }
                     else { throw "Invalid parameter" }
                 }
             }
         }
-        #if ( $null -eq $distroName) { $distroName = $wslName }
-        if ( $null -eq $wslName) {
-            # convert <group>/<name>:x.y.z => <name>-x.y.z
-            $wslName = (Split-Path -Path $distroName -Leaf) -replace '[:_]', '-'
+
+        if ($distroFileOrName.EndsWith('.tar.gz') -Or $distroFileOrName.EndsWith('.tgz') -Or $distroFileOrName.EndsWith('.tar')){
+            # Importing a tar file as distribution source
+            # image version is in wslName argument
+            if ( $null -eq $wslName) { throw "Invalid parameter: wslName mandatory" }
+            if (-Not ($wslName -match '[^:]+:[^:]+')) { throw "Invalid parameter: wslName need version" }
+            $from = $wslName
+            $wslName = (Split-Path -Path $wslName.SubString(0, $wslName.indexOf(':') ) -Leaf) -replace '[:_]', '-'
+            $archive = $distroFileOrName
+        } else {
+            $from = $distroFileOrName
+            #if ( $null -eq $distroFileOrName) { $distroFileOrName = $wslName }
+            if ( $null -eq $wslName) {
+                # convert <group>/<name>:x.y.z => <name>-x.y.z
+                $wslName = (Split-Path -Path $distroFileOrName -Leaf) -replace '[:_]', '-'
+            }
         }
 
         Write-Host "* Import $wslName"
@@ -55,13 +69,15 @@ Class DefaultController : AbstractController
         Write-Host "Check import requirements ..."
         $wslService.checkBeforeImport($wslName)
 
-        Write-Host "Dowload distribution '$distroName' ..."
-        $archive = $registryService.pull($distroName)
+        if ( $null -eq $archive) {
+            Write-Host "Dowload distribution '$from' ..."
+            $archive = $registryService.pull($from)
+        }
 
         Write-Host "Create wsl instance '$wslName' (wsl-version: $wslVersion)..."
         $wslService.import(
             $wslName,
-            $distroName,
+            $from,
             $archive,
             $wslVersion,
             $createUser

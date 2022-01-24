@@ -1,3 +1,6 @@
+v2.1.2:
+* [EVOL] ability to create from archive file (for wslctl)
+
 v2.1.1:
 * [EVOL] download does not return boolean
 

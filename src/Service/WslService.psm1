@@ -252,7 +252,7 @@ Class WslService
         # console's (OEM) code page.
         $prev = [Console]::OutputEncoding;
         [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-        $result = (& $this.Binary --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
+        $result = @( (& $this.Binary --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" } )
         [Console]::OutputEncoding = $prev
         $this._loadFile()
 

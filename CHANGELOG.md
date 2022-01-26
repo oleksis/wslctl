@@ -1,3 +1,6 @@
+v2.1.3:
+* [BUG] dysplay error with instance list when only one (string array)
+
 v2.1.2:
 * [EVOL] ability to create from archive file (for wslctl)
 * [ISSUE#12] setting default distribution

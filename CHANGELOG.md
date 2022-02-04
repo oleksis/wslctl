@@ -1,3 +1,8 @@
+v-working:
+* [TODO] accept .tar.xz files (@see https://github.com/Biswa96/WSLInstall/blob/master/docs/Make_RootFS.md)
+* [TODO] main repository linked with (@see https://uk.lxd.images.canonical.com/images/)
+* [EVOL] allow to have remote archive file defined in registries
+
 v2.1.3:
 * [BUG] dysplay error with instance list when only one (string array)
 

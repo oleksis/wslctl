@@ -99,9 +99,26 @@ Class Registry
         }
         $distroRealSha256 = $this.Distributions.$distroName.sha256
         $distroPackage = $this.Distributions.$distroName.archive
+        $distroPackageExtension = "tar.gz", "tar", "tgz" | where {$distroPackage -Like "*.$_" }
+        if ($distroPackageExtension.length -eq 0)
+        {
+            throw "Registry archive reference format not supported for '$distroName'"
+        }
 
-        $distroEndpoint = [FileUtils]::joinUrl($this.Remote, $distroPackage)
-        $distroLocation = [FileUtils]::joinPath($this.Location, $distroPackage)
+        if ($distroPackage.ToLower().StartsWith("http://") -or $distroPackage.ToLower().StartsWith("https://")) {
+            $distroEndpoint = $distroPackage
+            # compute distroPackage url hash (prevent file name longer than 256)
+            $enc   = [system.Text.Encoding]::UTF8
+            $sha1 = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider
+            $hash = ([String]$sha1.ComputeHash($enc.GetBytes($distroPackage))) -replace '\s',''
+            
+            $distroLocation = [FileUtils]::joinPath($this.Location, "$hash.$distroPackageExtension") 
+            write-host "$distroLocation"
+        } else {
+            # Registry relative Path
+            $distroEndpoint = [FileUtils]::joinUrl($this.Remote, $distroPackage)
+            $distroLocation = [FileUtils]::joinPath($this.Location, $distroPackage)
+        }
         $tempFile = [IO.Path]::GetTempFileName()
 
         # Check Distribution in cache or download it

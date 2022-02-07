@@ -33,6 +33,8 @@ Registry Management
 - [x] download integrity (sha256)
 - [x] local cache cleanup
 - [x] multi repository management
+* [ ] accept .tar.xz files (@see https://github.com/Biswa96/WSLInstall/blob/master/docs/Make_RootFS.md)
+* [ ] main repository linked with (@see https://uk.lxd.images.canonical.com/images/)
 
 Backup Management
 

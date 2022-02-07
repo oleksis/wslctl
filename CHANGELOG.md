@@ -1,6 +1,4 @@
-v-working:
-* [TODO] accept .tar.xz files (@see https://github.com/Biswa96/WSLInstall/blob/master/docs/Make_RootFS.md)
-* [TODO] main repository linked with (@see https://uk.lxd.images.canonical.com/images/)
+v2.1.4:
 * [EVOL] allow to have remote archive file defined in registries
 
 v2.1.3:

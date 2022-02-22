@@ -1,8 +1,12 @@
+v2.1.5 (working):
+* [BUG] check cached archive uptodate by computing with registry referenced hash (eg latest tag)
+* [BUG] typo Dowload -> Download
+
 v2.1.4:
 * [EVOL] allow to have remote archive file defined in registries
 
 v2.1.3:
-* [BUG] dysplay error with instance list when only one (string array)
+* [BUG] display error with instance list when only one (string array)
 
 v2.1.2:
 * [EVOL] ability to create from archive file (for wslctl)

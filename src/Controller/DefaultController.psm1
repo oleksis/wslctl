@@ -75,7 +75,7 @@ Class DefaultController : AbstractController
 
         if ( $null -eq $archive)
         {
-            Write-Host "Dowload distribution '$from' ..."
+            Write-Host "Download distribution '$from' ..."
             $archive = $registryService.pull($from)
         }
 

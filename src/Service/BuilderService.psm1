@@ -81,7 +81,7 @@ Class BuilderService
         Write-Host "Check import requirements ..."
         $wslService.checkBeforeImport($wslName)
 
-        Write-Host "Dowload distribution '$distroName' ..."
+        Write-Host "Download distribution '$distroName' ..."
         $archive = $registryService.pull($distroName)
 
         Write-Host "Create wsl instance '$wslName' (wsl-version: $wslVersion)..."

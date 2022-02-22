@@ -119,7 +119,16 @@ Class Registry
             $distroEndpoint = [FileUtils]::joinUrl($this.Remote, $distroPackage)
             $distroLocation = [FileUtils]::joinPath($this.Location, $distroPackage)
         }
-        $tempFile = [IO.Path]::GetTempFileName()
+
+        # Check Distribution cached uptodate with the registry defined hash for that distribution
+        if (Test-Path -Path $distroLocation) 
+        {
+            $distroLocationHash = [FileUtils]::sha256( $distroLocation )
+            if (-Not ($distroLocationHash -eq $distroRealSha256))
+            {
+                Remove-Item -Path $distroLocation -Force -ErrorAction Ignore | Out-Null
+            }
+        }
 
         # Check Distribution in cache or download it
         if (-Not (Test-Path -Path $distroLocation))
@@ -127,6 +136,7 @@ Class Registry
             # assert directory exists (distro package could have sub directories)
             $distroLocationParent = Split-Path $distroLocation -parent
             New-Item -ItemType Directory -Force -Path $distroLocationParent | Out-Null
+            $tempFile = [IO.Path]::GetTempFileName()
 
             if (-Not ([Downloader]::download($distroEndpoint, $tempFile)))
             {

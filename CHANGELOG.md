@@ -1,5 +1,6 @@
 v2.1.5 (working):
-* [BUG] check cached archive uptodate by computing with registry referenced hash (eg latest tag)
+* [ISSUE#8] logout on wsl required Ctrl+C to exit
+* [ISSUE#14] check cached archive uptodate by computing with registry referenced hash (eg latest tag)
 * [BUG] typo Dowload -> Download
 
 v2.1.4:

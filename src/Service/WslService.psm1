@@ -359,7 +359,7 @@ Class WslService
 
     [Int32] connect([string]$name)
     {
-        return $this.exec($name, @("/bin/bash", "--login"))
+        return $this.exec($name, @("/bin/bash --login"))
     }
 
     [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs)

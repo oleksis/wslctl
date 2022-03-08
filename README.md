@@ -68,7 +68,7 @@ PS> wslctl registry add <name> <registry-base-endpoint>
 Example
 
 ```bash
-PS> wslctl registry add main https://your.repository.target
+PS> wslctl registry add yours https://your.repository.target
 ```
 
 
@@ -88,12 +88,12 @@ Get the registry URL and type folloging commands:
 
 ```powershell
 # get metadata from registry:
-PS> wslctl registry add main <registry-base-endpoint>
+PS> wslctl registry add main https://raw.githubusercontent.com/mbl-35/wslctl-main/main
 PS> wslctl registry update
 # optionnal
 PS> wslctl version default 2
 # create wsl instance
-PS> wslctl create srsrns/ubuntu:20.04
+PS> wslctl create ubuntu:20.04
 ```
 
 > You will have a fresh ubuntu focal named `ubuntu-20.04` install with your windows user name as default user

@@ -1,4 +1,8 @@
-v2.1.5 (working):
+v2.1.6 (working):
+* [EVOL] Custom custom module refresh on each execution (dynamic manage module names cache)
+* [EVOL] Add editor config
+
+v2.1.5:
 * [ISSUE#8] logout on wsl required Ctrl+C to exit
 * [ISSUE#14] check cached archive uptodate by computing with registry referenced hash (eg latest tag)
 * [BUG] typo Dowload -> Download

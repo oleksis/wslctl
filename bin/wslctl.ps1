@@ -33,7 +33,7 @@ if (Test-Path -Path $moduleFile -PathType Leaf){
 Get-Module | ForEach-Object {
     if ($myModules.contains($_.Name)){
         Write-Verbose "removing: $_.Name"
-        try { Remove-Module $_.Name -Force } catch {;}
+        try { Remove-Module $_.Name -Force -ErrorAction SilentlyContinue } catch {;}
     }
 }
 

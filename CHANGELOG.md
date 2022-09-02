@@ -1,4 +1,5 @@
 v2.1.6 (working):
+* [ISSUE#15] Default User creation error on ubuntu 22.04
 * [ISSUE#17] Custom custom module refresh on each execution (dynamic manage module names cache)
 * [EVOL] Add editor config
 * [ISSUE#8] logout on wsl required Ctrl+C to exit - not reproduced

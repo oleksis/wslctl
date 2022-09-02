@@ -130,7 +130,7 @@ Class WslService
                 "/usr/sbin/addgroup --gid 1000 $($this.defaultUsename)"
                 "/usr/sbin/adduser --quiet --disabled-password --gecos '' --uid 1000 --gid 1000 $($this.defaultUsename)"
                 "/usr/sbin/usermod -aG sudo $($this.defaultUsename)"
-                "userpass=`$(/usr/bin/openssl passwd -crypt $($this.defaultPassword))"
+                "userpass=`$(/usr/bin/openssl passwd -1 $($this.defaultPassword))"
                 "/usr/sbin/usermod --password `$userpass $($this.defaultUsename)"
                 "/usr/bin/printf '\n[user]\ndefault=%s\n' $($this.defaultUsename) >>/etc/wsl.conf"
             ) -Join ";"

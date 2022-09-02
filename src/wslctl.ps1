@@ -19,11 +19,11 @@ $srcdir = "$(Split-Path -Parent -Path $PSScriptRoot)/src"
 # @see: https://stackoverflow.com/questions/67027886/reload-the-powershell-module-every-time-the-script-is-executing
 # @see: https://github.com/PowerShell/PowerShell/issues/7654
 # @see: https://github.com/PowerShell/PowerShell/issues/2505
-$moduleFile = "$srcdir/modules.json"
+$moduleFile = "$PSScriptRoot/modules.json"
 if (Test-Path -Path $moduleFile -PathType Leaf){
     $myModules = @((Get-Content -Raw $moduleFile | ConvertFrom-Json))
 } else {
-    $myModules=@((Get-ChildItem -Path "$srcdir" -Filter '*.psm1' -Recurse -Force |
+    $myModules=@((Get-ChildItem -Path "." -Filter '*.psm1' -Recurse -Force |
         ForEach-Object -Process {[System.IO.Path]::GetFileNameWithoutExtension($_) }
     ))
     ConvertTo-Json -InputObject $myModules | Out-File -FilePath $moduleFile
@@ -45,4 +45,4 @@ Get-Module | ForEach-Object {
 # TODO: setup_proxy
 
 # include main application
-. "$srcdir/bootstrap.ps1" @Args
+. "$PSScriptRoot/bootstrap.ps1" @Args

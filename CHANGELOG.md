@@ -1,6 +1,7 @@
 v2.1.6 (working):
-* [EVOL] Custom custom module refresh on each execution (dynamic manage module names cache)
+* [ISSUE#17] Custom custom module refresh on each execution (dynamic manage module names cache)
 * [EVOL] Add editor config
+* [ISSUE#8] logout on wsl required Ctrl+C to exit - not reproduced
 
 v2.1.5:
 * [ISSUE#8] logout on wsl required Ctrl+C to exit

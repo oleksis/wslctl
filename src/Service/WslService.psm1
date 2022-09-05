@@ -124,19 +124,32 @@ Class WslService
             })
         $this.Instances.commit()
 
+        # copy val_ini script (suppose /usr/local/bin on all OS)
+        $iniValPath = "$(Split-Path -Parent -Path $PSScriptRoot)/Resource/ini_val.sh"
+        $this.copy($name, $iniValPath, "/usr/local/bin/ini_val")
+        $commandLine = @( "chmod +x /usr/local/bin/ini_val" )
+
+        # create default user
         if ($createDefaultUser)
         {
-            $commandLine = @(
+            $commandLine += @(
                 "/usr/sbin/addgroup --gid 1000 $($this.defaultUsename)"
                 "/usr/sbin/adduser --quiet --disabled-password --gecos '' --uid 1000 --gid 1000 $($this.defaultUsename)"
                 "/usr/sbin/usermod -aG sudo $($this.defaultUsename)"
                 "userpass=`$(/usr/bin/openssl passwd -1 $($this.defaultPassword))"
                 "/usr/sbin/usermod --password `$userpass $($this.defaultUsename)"
-                "/usr/bin/printf '\n[user]\ndefault=%s\n' $($this.defaultUsename) >>/etc/wsl.conf"
-            ) -Join ";"
-            $returnCode = $this.exec($name, @( "$commandLine" ))
-            & $this.Binary --terminate $name
+                "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsename)"
+            )
         }
+
+        # set the wsl instance hostname
+        $commandLine += "/usr/local/bin/ini_val /etc/wsl.conf network.hostname $($name)"
+        $commandLineTxt = $commandLine -Join ";"
+        Write-Verbose $commandLineTxt
+
+        # execute all
+        $returnCode = $this.exec($name, @( "$commandLineTxt" ))
+        & $this.Binary --terminate $name
         return $returnCode
     }
 
@@ -399,6 +412,26 @@ Class WslService
         $processArgs = "--distribution $name -- $commandline"
         $process = Start-Process $this.Binary $processArgs -NoNewWindow -Wait -ErrorAction Stop -PassThru
         return $process.ExitCode
+    }
+
+    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath)
+    {
+        # check file exists
+        if (-not (Test-Path $winSrcPath -PathType leaf))
+        {
+            throw "File not found"
+        }
+
+        # resolve windows full path
+        $winSrcFullPath = Resolve-Path -Path $winSrcPath -ErrorAction Stop
+        # get same file accessible from wsl
+        $wslSrcFullPath = $this.wslPath($winSrcFullPath)
+        $commandLine = @(
+            "cp $wslSrcFullPath $wslDestPath"
+            "return_code=`$?"
+            "exit `$return_code"
+        ) -Join ";"
+        return $this.exec($name, @( "$commandLine" ))
     }
 
     [String] wslPath([String] $winPath)

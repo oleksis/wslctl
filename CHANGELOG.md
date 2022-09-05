@@ -1,4 +1,6 @@
-v2.1.6 (working):
+v2.1.6:
+* [EVOL] /usr/local/bin/ini_val to manage /etc/wsl.conf properties
+* [EVOL] Set the wsl hostname with the wsl instance name on creation
 * [ISSUE#15] Default User creation error on ubuntu 22.04
 * [ISSUE#17] Custom custom module refresh on each execution (dynamic manage module names cache)
 * [EVOL] Add editor config

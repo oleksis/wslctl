@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 # ASH version of the BASH3 Boilerplate: ini_val
 # @see: https://github.com/kvz/bash3boilerplate/blob/master/src/ini_val.sh
 #

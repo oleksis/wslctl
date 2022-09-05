@@ -9,7 +9,6 @@ Upgrade PowerShell: 'https://docs.microsoft.com/en-us/powershell/scripting/insta
     exit 1
 }
 
-$srcdir = "$(Split-Path -Parent -Path $PSScriptRoot)/src"
 
 # Wrapper to cleanup custom modules from PowerShell session cache
 # Could not be integrated with wslctl-boostrap because it's using 'use module'

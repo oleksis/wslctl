@@ -127,7 +127,12 @@ Class WslService
         # copy val_ini script (suppose /usr/local/bin on all OS)
         $iniValPath = "$(Split-Path -Parent -Path $PSScriptRoot)/Resource/ini_val.sh"
         $this.copy($name, $iniValPath, "/usr/local/bin/ini_val")
-        $commandLine = @( "chmod +x /usr/local/bin/ini_val" )
+
+        # Assert *nix file format
+        $commandLine = @(
+            "sed -i 's/\r//' /usr/local/bin/ini_val"
+            "chmod +x /usr/local/bin/ini_val"
+            )
 
         # create default user
         if ($createDefaultUser)

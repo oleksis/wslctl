@@ -1,3 +1,7 @@
+v2.1.7:
+* [BUG] init_val is CRLF after build production: assert wsl file is LF only
+* [BUG] !/usr/bin/env sh not interpreted on ubunut => !/bin/sh
+
 v2.1.6:
 * [EVOL] /usr/local/bin/ini_val to manage /etc/wsl.conf properties
 * [EVOL] Set the wsl hostname with the wsl instance name on creation

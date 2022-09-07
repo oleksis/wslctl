@@ -617,6 +617,8 @@ cd /usr/local/src/ngx_mruby && sh build.sh && make install
 In order to ba able to call `build.ps1` tasks, we need first import `InvokeBuild` powershell module as follow:
 ```powershell
 PS> Install-Module -name InvokeBuild -Scope CurrentUser
+PS> Install-Module -Name PSScriptAnalyzer -Repository PSGallery -Force -Scope CurrentUser
+
 PS> Invoke-Build -File ./.build.ps1 -Configuration 'Test'
 
 # Correct with PSScriptAnalyser

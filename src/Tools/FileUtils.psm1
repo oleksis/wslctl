@@ -68,6 +68,23 @@ Class FileUtils
         }
     }
 
+    static [String] getResourcePath([String] $resource)
+    {
+        # Locate the resource directory ($PSScriptRoot or parent/parent $PSScriptRoot depending)
+        # on 'using module' or one script installation
+        @(
+            [FileUtils]::joinPath("$((Get-Item $PSScriptRoot).FullName)", "files"),
+            [FileUtils]::joinPath((Get-Item $PSScriptRoot).parent.parent.FullName, "files")
+        ) | ForEach-Object {
+            $resFile = [FileUtils]::joinPath($_, $resource)
+            if (Test-Path -Path "$resFile" -PathType leaf)
+            {
+                return $resFile
+            }
+        }
+        throw "Ressource file '$resource' not found"
+    }
+
     static [Boolean] copyWithProgress([String] $from, [String] $to)
     {
         $result = $true

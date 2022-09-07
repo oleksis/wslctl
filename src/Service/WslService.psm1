@@ -125,7 +125,7 @@ Class WslService
         $this.Instances.commit()
 
         # copy val_ini script (suppose /usr/local/bin on all OS)
-        $iniValPath = "$(Split-Path -Parent -Path $PSScriptRoot)/Resource/ini_val.sh"
+        $iniValPath = [FileUtils]::getResourcePath("ini_val.sh")
         $this.copy($name, $iniValPath, "/usr/local/bin/ini_val")
 
         # Assert *nix file format

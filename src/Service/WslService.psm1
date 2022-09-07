@@ -276,7 +276,6 @@ Class WslService
 
         $final = @()
         $final += $result.GetEnumerator() | ForEach-Object {
-            $itemMatches = $null
             $default = " "
             $name = $_
             $from = "-"
@@ -285,7 +284,7 @@ Class WslService
             if ("$_" -match "^(?<name>[^ ]*) (?<default>.*)$")
             {
                 $default = "*"
-                $name = $itemMatches['name'].Trim()
+                $name = $matches['name'].Trim()
             }
             if ($this.Instances.ContainsKey($name))
             {

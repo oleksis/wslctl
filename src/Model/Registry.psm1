@@ -99,7 +99,7 @@ Class Registry
         }
         $distroRealSha256 = $this.Distributions.$distroName.sha256
         $distroPackage = $this.Distributions.$distroName.archive
-        $distroPackageExtension = "tar.gz", "tar", "tgz" | where {$distroPackage -Like "*.$_" }
+        $distroPackageExtension = "tar.gz", "tar", "tgz" | Where-Object {$distroPackage -Like "*.$_" }
         if ($distroPackageExtension.length -eq 0)
         {
             throw "Registry archive reference format not supported for '$distroName'"
@@ -111,8 +111,8 @@ Class Registry
             $enc   = [system.Text.Encoding]::UTF8
             $sha1 = New-Object System.Security.Cryptography.SHA1CryptoServiceProvider
             $hash = ([String]$sha1.ComputeHash($enc.GetBytes($distroPackage))) -replace '\s',''
-            
-            $distroLocation = [FileUtils]::joinPath($this.Location, "$hash.$distroPackageExtension") 
+
+            $distroLocation = [FileUtils]::joinPath($this.Location, "$hash.$distroPackageExtension")
             write-host "$distroLocation"
         } else {
             # Registry relative Path
@@ -121,7 +121,7 @@ Class Registry
         }
 
         # Check Distribution cached uptodate with the registry defined hash for that distribution
-        if (Test-Path -Path $distroLocation) 
+        if (Test-Path -Path $distroLocation)
         {
             $distroLocationHash = [FileUtils]::sha256( $distroLocation )
             if (-Not ($distroLocationHash -eq $distroRealSha256))

@@ -58,14 +58,14 @@ Write-Host @'
 
 Write-Host("Checking for Windows Version...")
 if ([Environment]::OSVersion.Version.Major -lt 10) {
-    Write-Error 'Upgrade to Windows 10 before running this script'
-    Exit
+    Write-Host 'Upgrade to Windows 10 before running this script' -ForegroundColor 'DarkRed'
+    exit 1
 }
 
 Write-Host("Checking for Windows Minimum Release...")
 if ((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId -lt 1803) {
-    Write-Error 'You need to run Windows Update and install Feature Updates to at least version 1803'
-    Exit
+    Write-Host 'You need to run Windows Update and install Feature Updates to at least version 1803' -ForegroundColor 'DarkRed'
+    exit 2
 }
 
 Write-Host("Checking for Windows Subsystem for Linux...")

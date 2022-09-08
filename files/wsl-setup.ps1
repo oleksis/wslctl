@@ -1,6 +1,5 @@
+#Requires -Version 5
 # Install WSL
-
-
 
 function Update-Kernel () {
     Write-Host(" ...Downloading WSL2 Kernel Update.")

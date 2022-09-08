@@ -522,7 +522,7 @@ ubuntu-14.04.5-bkp.01       - 2021/10/27 17:25:30 -       230,11 MB - Retest oop
 ```
 
 
-# Building
+# Building a wsl instance
 
 Nothing pushed to registry nor backup.
 > Only the wsl instance is created.
@@ -612,27 +612,17 @@ cd /usr/local/src/ngx_mruby && sh build.sh && make install
 
 # Development Notes
 
+Usage of `make.ps1` :
+
 ### ScriptAnalyzer
 
-In order to ba able to call `build.ps1` tasks, we need first import `InvokeBuild` powershell module as follow:
 ```powershell
-PS> Install-Module -name InvokeBuild -Scope CurrentUser
-PS> Install-Module -Name PSScriptAnalyzer -Repository PSGallery -Force -Scope CurrentUser
-
-PS> Invoke-Build -File ./.build.ps1 -Configuration 'Test'
+PS> ./make.ps1 test
 
 # Correct with PSScriptAnalyser
 PS> Get-Help Get-ScriptAnalyzerRule -ShowWindow
 ```
 
-### Building wslctl Executable
-
-> This does not work anymore... Just to remember
-> Not be able to starts interactive bash with usage of Ps2exe. **So deliver ps1/pms1 scripts files only**
-```Powershell
-PS> Install-Module -Name ps2exe -Scope CurrentUser
-PS> ps2exe wslctl.ps1
-```
 
 ### Create a release
 
@@ -644,6 +634,11 @@ PS> ps2exe wslctl.ps1
 1. Push to upstream: `git push --tags origin master`.
 
 
+### Building Wslctl Distributions
+
+```Powershell
+PS> ./make.ps1
+```
 
 
 

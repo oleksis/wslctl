@@ -1,47 +1,40 @@
-#Requires -Version 5
-Set-StrictMode -Off
-
-if (($PSVersionTable.PSVersion.Major) -lt 5) {
-    Write-Host @'
-PowerShell 5 or later is required
-Upgrade PowerShell: 'https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows?view=powershell-7.1'
-'@ -ForegroundColor 'DarkRed'
-    exit 1
-}
-
-
-# Wrapper to cleanup custom modules from PowerShell session cache
-# Could not be integrated with wslctl-boostrap because it's using 'use module'
-# directive which need to be first instructions of file
-# NOTE: the main application is now in wslctl-bootstrap.ps1 file
+# -----------------------------------------------------------------------------
+# Author: mbl35
 #
-# @see: https://stackoverflow.com/questions/67027886/reload-the-powershell-module-every-time-the-script-is-executing
-# @see: https://github.com/PowerShell/PowerShell/issues/7654
-# @see: https://github.com/PowerShell/PowerShell/issues/2505
-$moduleFile = "$PSScriptRoot/modules.json"
-if (Test-Path -Path $moduleFile -PathType Leaf){
-    $myModules = @((Get-Content -Raw $moduleFile | ConvertFrom-Json))
-} else {
-    $myModules=@((Get-ChildItem -Path "." -Filter '*.psm1' -Recurse -Force |
-        ForEach-Object -Process {[System.IO.Path]::GetFileNameWithoutExtension($_) }
-    ))
-    ConvertTo-Json -InputObject $myModules | Out-File -FilePath $moduleFile
-}
+#  This is a PowerShell wrapper around the inbuilt WSL CLI.
+#  It simplifies the calls to wsl, by just allowing you to call commands with
+#  a simple "wslctl" call.
+#  Best used with the path to the script in your PATH.
+# -----------------------------------------------------------------------------
 
-# remove custom known Modules:
-Get-Module | ForEach-Object {
-    if ($myModules.contains($_.Name)){
-        Write-Verbose "removing: $_.Name"
-        try { Remove-Module $_.Name -Force -ErrorAction SilentlyContinue } catch {;}
-    }
-}
+using module ".\Application\ServiceLocator.psm1"
+using module ".\Application\AppConfig.psm1"
+using module ".\Application\ControllerManager.psm1"
 
-# Note: Github disabled TLS 1.0 support on 2018-02-23. Need to enable TLS 1.2
-#       for all communication with api.github.com
-# TODO: Optimize-SecurityProtocol
+using module ".\Service\BuilderService.psm1"
+using module ".\Service\RegistryService.psm1"
+using module ".\Service\BackupService.psm1"
+using module ".\Service\WslService.psm1"
 
-# Setup proxy globally
-# TODO: setup_proxy
+using module ".\Controller\DefaultController.psm1"
+using module ".\Controller\BackupController.psm1"
+using module ".\Controller\RegistryController.psm1"
 
-# include main application
-. "$PSScriptRoot/bootstrap.ps1" @Args
+
+$version = "2.2.0-alpha"
+
+[ServiceLocator]::getInstance().add( 'config', [AppConfig]::new($version) )
+[ServiceLocator]::getInstance().add( 'registry', [RegistryService]::new() )
+[ServiceLocator]::getInstance().add( 'backup', [BackupService]::new() )
+[ServiceLocator]::getInstance().add( 'builder', [BuilderService]::new() )
+[ServiceLocator]::getInstance().add( 'wsl-wrapper', [WslService]::new() )
+
+
+
+[ControllerManager]::new(@(
+    [DefaultController]::new(),
+    [BackupController]::new(),
+    [RegistryController]::new()
+)).run( $args )
+
+exit $LastExitCode

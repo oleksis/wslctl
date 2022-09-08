@@ -16,7 +16,8 @@ jobs:
         id: psmodulecache
         uses: potatoqualitee/psmodulecache@v3.5
         with:
-          modules-to-cache: Pester, PSScriptAnalyzer, InvokeBuild
+          #modules-to-cache: Pester, PSScriptAnalyzer , InvokeBuild
+          modules-to-cache: Pester, PSScriptAnalyzer
           shell: pwsh
 
         # Setting up the powershell module cache
@@ -36,7 +37,8 @@ jobs:
 
       - name: Invoke PSScriptAnalyzer & Pester Tests
         shell: pwsh
-        run: pwsh -command "Invoke-Build -File ./.build.ps1 -Configuration 'Test' -ciMode"
+        #run: pwsh -command "Invoke-Build -File ./.build.ps1 -Configuration 'Test' -ciMode"
+        run: pwsh -command "./make.ps1 qa-tests-ci"
 
 
   build_release:
@@ -45,32 +47,33 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # Setting up required powershell modules
-      - name: Set required PowerShell modules
-        id: psmodulecachebuild
-        uses: potatoqualitee/psmodulecache@v3.5
-        with:
-          modules-to-cache: InvokeBuild, Ps2exe
-          shell: powershell
+      # # Setting up required powershell modules
+      # - name: Set required PowerShell modules
+      #   id: psmodulecachebuild
+      #   uses: potatoqualitee/psmodulecache@v3.5
+      #   with:
+      #     modules-to-cache: InvokeBuild, Ps2exe
+      #     shell: powershell
 
-        # Setting up the powershell module cache
-      - name: Setup PowerShell module cache
-        id: cacher
-        uses: actions/cache@v2
-        with:
-            path: ${{ steps.psmodulecachebuild.outputs.modulepath }}
-            key: ${{ steps.psmodulecachebuild.outputs.keygen }}
+      #   # Setting up the powershell module cache
+      # - name: Setup PowerShell module cache
+      #   id: cacher
+      #   uses: actions/cache@v2
+      #   with:
+      #       path: ${{ steps.psmodulecachebuild.outputs.modulepath }}
+      #       key: ${{ steps.psmodulecachebuild.outputs.keygen }}
 
-        # Installing the required powershell module, if not cached
-      - name: Install required PowerShell modules
-        if: steps.cacher.outputs.cache-hit != 'true'
-        uses: potatoqualitee/psmodulecache@v3.5
-        with:
-          shell: powershell
+      #   # Installing the required powershell module, if not cached
+      # - name: Install required PowerShell modules
+      #   if: steps.cacher.outputs.cache-hit != 'true'
+      #   uses: potatoqualitee/psmodulecache@v3.5
+      #   with:
+      #     shell: powershell
 
       - name: Building Application
         shell: powershell
-        run: powershell -command "Invoke-Build -File ./.build.ps1 -Configuration 'Release' -ciMode"
+        #run: powershell -command "Invoke-Build -File ./.build.ps1 -Configuration 'Release' -ciMode"
+        run: powershell -command "./make.ps1 release-ci"
 
       - uses: actions/upload-artifact@v2
         with:

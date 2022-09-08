@@ -1,3 +1,10 @@
+v2.2.0 (working):
+* [EVOL] Fedup with PS module cache: refactor to build a single file script for runtime
+* [EVOL] move resource files to ~/files and get a FileUtils method to find them
+* [EVOL] remove Invoque-Build usage and generate a make.ps1 builder
+* [REVERT] src/bootstrap.ps1 to src/wslctl.ps1
+* [EVOL] Changes Github CI
+
 v2.1.7:
 * [BUG] init_val is CRLF after build production: assert wsl file is LF only
 * [BUG] !/usr/bin/env sh not interpreted on ubunut => !/bin/sh

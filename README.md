@@ -45,6 +45,13 @@ Backup Management
 - [x] restore confirmation when wsl instance already exists
 - [ ] restore with another name
 
+## Requirements
+
+This tool manage the wsl processus and wsl distribution instances.
+`wsl.exe` need to be installed first.
+
+You can use the `./files/wsl-setup.ps1` script (need admin privileges) to setup everithings.
+
 
 ## Install
 

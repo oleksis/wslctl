@@ -1,4 +1,10 @@
 v2.2.0 (working):
+TODO
+* upgrade bucket files to insert distribution shell (+ modify exec cmd)
+* check empty distribution list (wsl message)
+DONE
+* [EVOL] Provide wsl-setup.ps1 script to install/update wsl kernel
+* [EVOL] Add wslctl requirements check before all
 * [EVOL] Fedup with PS module cache: refactor to build a single file script for runtime
 * [EVOL] move resource files to ~/files and get a FileUtils method to find them
 * [EVOL] remove Invoque-Build usage and generate a make.ps1 builder

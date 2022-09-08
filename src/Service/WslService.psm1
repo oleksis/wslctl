@@ -376,7 +376,10 @@ Class WslService
 
     [Int32] connect([string]$name)
     {
-        return $this.exec($name, @("/bin/bash --login"))
+        $shellArray=@('/bin/zsh', '/bin/bash', '/bin/sh')
+        $cmdTxt = (( $shellArray | ForEach-Object { "if [ -x $_ ]; then $_ --login;" } ) -Join " else ") + (" fi;" * $shellArray.Length) + ' exit $?'
+
+        return $this.exec($name, @("$($cmdTxt)"))
     }
 
     [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs)

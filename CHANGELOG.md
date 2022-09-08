@@ -1,8 +1,8 @@
 v2.2.0 (working):
 TODO
-* upgrade bucket files to insert distribution shell (+ modify exec cmd)
 * check empty distribution list (wsl message)
 DONE
+* [EVOL] Auto-detect connect shell (i.e. allowing alpine)
 * [EVOL] Provide wsl-setup.ps1 script to install/update wsl kernel
 * [EVOL] Add wslctl requirements check before all
 * [EVOL] Fedup with PS module cache: refactor to build a single file script for runtime

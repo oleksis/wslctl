@@ -212,10 +212,10 @@ function Build_CopyResources_Task
     Set-BuildLine 'Copy Resource & Cmd files'
     Assert-ArchSourceFolder
     # copy the resource folder'
-	Copy-Item $Settings.ResourceFolder $Settings.ArchSourceFolder -Recurse
+	Copy-Item $Settings.ResourceFolder $Settings.ArchSourceFolder -Recurse -Force
 
     # copy the .cmd file
-    Copy-Item "$($Settings.SourceFolder)/$($Settings.AppName).cmd"  $Settings.ArchSourceFolder
+    Copy-Item "$($Settings.SourceFolder)/$($Settings.AppName).cmd"  $Settings.ArchSourceFolder -Force
 }
 
 

@@ -102,14 +102,14 @@ Class DefaultController : AbstractController
             # List all wsl instance status
             # Remove wsl List header and display own
             Write-Host "Wsl instances status:" -ForegroundColor Yellow
-            $wslService.statusAll() | ForEach-Object {
-                "$_" -match "^(?<default>[*| ]*)(?<distro>[^ ]*)(?<infos>.*)$"
-                #write-host $matches
+            $wslService.list().GetEnumerator() | ForEach-Object {
                 [ExtendedConsole]::WriteColor( @(
-                        $matches['default'],
-                        $matches['distro'],
-                        $matches['infos']),
-                    @("White", "Green", "White"))
+                    $("{0,1} "    -f "$(If ($($_.default)) {"*"} Else {" "})"),
+                    $("{0,-23} " -f "$($_.name)"),
+                    $("{0,-15} " -f "$(If ($($_.running)) {"Running"} Else {"Stopped"})"),
+                    $("{0,1}"   -f "$($_.wslVersion)")
+                    ),
+                @("White", "Green", "White", "White"))
             }
         }
         else
@@ -184,13 +184,15 @@ Class DefaultController : AbstractController
 
         Write-Host "Wsl instances:" -ForegroundColor Yellow
         $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
-        $wslService.list() | ForEach-Object {
-            "$_" -match "^(?<default>[*| ]*)(?<distro>[^ ]*)(?<infos>.*)$"
+
+        $wslService.list().GetEnumerator() | ForEach-Object {
             [ExtendedConsole]::WriteColor( @(
-                    $matches['default'],
-                    $matches['distro'],
-                    $matches['infos']),
-                @("White", "Green", "White"))
+                $("{0,1} "   -f "$(If ($($_.default)) {"*"} Else {" "})"),
+                $("{0,-23} " -f "$($_.name)"),
+                $("{0,-20} " -f "$($_.creation)"),
+                $("{0}"      -f (' ' * 4) + "$($_.from)")
+                ),
+            @("White", "Green", "White", "White"))
         }
     }
 

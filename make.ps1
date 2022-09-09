@@ -22,6 +22,7 @@ $Settings = @{
         "Controller\RegistryController.psm1",
         "Model\DockerFile.psm1",
         "Model\Registry.psm1",
+        "Model\WslElement.psm1",
         "Service\BackupService.psm1",
         "Service\BuilderService.psm1",
         "Service\RegistryService.psm1",

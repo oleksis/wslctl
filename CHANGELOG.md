@@ -1,7 +1,9 @@
 v2.2.0 (working):
 TODO
-* check empty distribution list (wsl message)
+* start action on alpine should not work..
 DONE
+* [EvVOL] Manage wsl output list as object (no more strings)
+* [ISSUE#19] Display error wslctl ls when no distributions
 * [EVOL] Auto-detect connect shell (i.e. allowing alpine)
 * [EVOL] Provide wsl-setup.ps1 script to install/update wsl kernel
 * [EVOL] Add wslctl requirements check before all
@@ -13,7 +15,7 @@ DONE
 
 v2.1.7:
 * [BUG] init_val is CRLF after build production: assert wsl file is LF only
-* [BUG] !/usr/bin/env sh not interpreted on ubunut => !/bin/sh
+* [BUG] !/usr/bin/env sh not interpreted on ubuntu => !/bin/sh
 
 v2.1.6:
 * [EVOL] /usr/local/bin/ini_val to manage /etc/wsl.conf properties

@@ -3,6 +3,7 @@ using module "..\Application\AppConfig.psm1"
 using module "..\Application\ServiceLocator.psm1"
 using module "..\Tools\FileUtils.psm1"
 using module "..\Model\JsonHashtableFile.psm1"
+using module "..\Model\WslElement.psm1"
 
 
 Class WslService
@@ -208,7 +209,7 @@ Class WslService
             $this.terminate($name)
         }
 
-        &  $this.Binary  --set-version $name $version
+        &  $this.Binary --set-version $name $version
         return $LastExitCode
     }
 
@@ -234,67 +235,63 @@ Class WslService
 
     [Boolean] isRunning([String] $name)
     {
-        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
-        # ("Unicode"-encoded) output rather than respecting the
-        # console's (OEM) code page.
-        $prev = [Console]::OutputEncoding;
-        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-
-        $isrunning = [bool](& $this.Binary --list --running |`
-                Select-String -Pattern "^$name *"  -Quiet)
-
-        [Console]::OutputEncoding = $prev
-        return $isRunning
+        return (@( $this.list() | Select-Object | Where-Object {
+                $_.name -eq $name -and $_.running -eq $true
+            }).Length -ne 0)
     }
 
 
     [Boolean] exists([String] $name)
     {
-        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
-        # ("Unicode"-encoded) output rather than respecting the
-        # console's (OEM) code page.
-        $prev = [Console]::OutputEncoding;
-        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-
-        $exists = [bool](& $this.Binary --list --verbose |`
-                Select-String -Pattern " +$name +" -Quiet)
-
-        [Console]::OutputEncoding = $prev
-        return $exists
+        return (@( $this.list() | Select-Object | Where-Object {
+            $_.name -eq $name
+        }).Length -ne 0)
     }
 
     [Array] list()
     {
-        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
+        # Inexplicably, wsl --list verbose produces UTF-16LE-encoded
         # ("Unicode"-encoded) output rather than respecting the
         # console's (OEM) code page.
         $prev = [Console]::OutputEncoding;
         [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-        $result = @( (& $this.Binary --list | Select-Object -Skip 1) | Where-Object { $_ -ne "" } )
+        $consoleResult = @( (& $this.Binary --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" } )
         [Console]::OutputEncoding = $prev
-        $this._loadFile()
 
-        $final = @()
-        $final += $result.GetEnumerator() | ForEach-Object {
-            $default = " "
-            $name = $_
-            $from = "-"
-            $creation = "-"
+        $result=@()
 
-            if ("$_" -match "^(?<name>[^ ]*) (?<default>.*)$")
-            {
-                $default = "*"
-                $name = $matches['name'].Trim()
+        #ISSUE-19: Display error wslctl ls when no distribution
+        $hasDistribution = (@( $consoleResult | Select-Object | Where-Object {
+                $_ -like "https://aka.ms/wslstore"
+            }).Length -eq 0)
+
+        if ($hasDistribution)
+        {
+            $this._loadFile()
+            $consoleResult.GetEnumerator() | ForEach-Object {
+                $lineWords = [array]($_.split(" ") | Where-Object {$_})
+                $element = [WslElement]::new()
+
+                if ($lineWords.Length -eq 4)
+                {
+                    # this is the default distribution
+                    $element.default = $true
+                    $null, $lineWords = $lineWords
+                }
+                $element.name, $status, $element.wslVersion = $lineWords
+                $element.running = $( $status -eq "Running" )
+                if ($this.Instances.ContainsKey($element.name))
+                {
+                    $element.from = $this.Instances.$($element.name).image
+                    $element.creation = $this.Instances.$($element.name).creation
+                }
+                $result += $element
             }
-            if ($this.Instances.ContainsKey($name))
-            {
-                $from = $this.Instances.$name.image
-                $creation = $this.Instances.$name.creation
-            }
-            "{0,1} {1,-23}   {2,-20}   {3,1}" -f $default, $name, $creation, $from
         }
-        return $final
+
+        return $result
     }
+
 
     [String] status([String] $name)
     {
@@ -302,8 +299,10 @@ Class WslService
         {
             return "* $name is not a wsl instance"
         }
-        return ( ($this.statusAll() | Select-String -Pattern " +$name +" | Out-String).Trim() -Split '[\*\s]+' |`
-                Where-Object { $_ } )[1]
+        $running = ( $this.list() | Select-Object | Where-Object {
+                $_.name -eq $name
+            }).running
+        return $(if ($running) { "Running"} else { "Stopped" } )
     }
 
     [int] version([String] $name)
@@ -312,15 +311,17 @@ Class WslService
         {
             return -1
         }
-        return [int]( ($this.statusAll() | Select-String -Pattern " +$name +" | Out-String).Trim() -Split '[\*\s]+' |`
-                Where-Object { $_ } )[2]
+        return ( $this.list() | Select-Object | Where-Object {
+            $_.name -eq $name
+        }).wslVersion
 
     }
 
     [String] getDefaultDistribution()
     {
-        return (($this.statusAll() | Select-String -Pattern "\*" | Out-String).Trim()  -Split '[\*\s]+' |`
-            Where-Object { $_ } )[0]
+        return ( $this.list() | Select-Object | Where-Object {
+            $_.default -eq $true
+        }).name
     }
 
     [String] setDefaultDistribution([String] $name)
@@ -332,20 +333,6 @@ Class WslService
 
         & $this.Binary --set-default $name
         return $LastExitCode
-    }
-
-    [String[]] statusAll()
-    {
-        # Inexplicably, wsl --list --running produces UTF-16LE-encoded
-        # ("Unicode"-encoded) output rather than respecting the
-        # console's (OEM) code page.
-        $prev = [Console]::OutputEncoding;
-        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-
-        $result = (& $this.Binary --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" }
-
-        [Console]::OutputEncoding = $prev
-        return [String[]]$result
     }
 
 

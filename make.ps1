@@ -223,6 +223,16 @@ function Build_Archive_Task
 {
     Assert-ArchSourceFolder
     $Version = (cmd /c powershell "$($Settings.SourceFolder)\$($Settings.AppName).ps1" --version)
+    # check return version format:
+    $versionPattern = '([0-9])+\.([0-9])+\.([0-9])+\-?(.*)?'
+    $semVersion = $Version -match $versionPattern
+
+    if (!$semVersion)
+    {
+        throw "Unvalid Semver version: $Version"
+    }
+
+
     $ArchiveFile = "$($Settings.DistFolder)\$($Settings.AppName)-v$Version.zip"
 
     Write-Output "Compress Release $Version File $ArchiveFile"

@@ -127,29 +127,32 @@ Class WslService
 
         # copy val_ini script (suppose /usr/local/bin on all OS)
         $iniValPath = [FileUtils]::getResourcePath("ini_val.sh")
+        $iniUsrPath = [FileUtils]::getResourcePath("ini_user.sh")
         $this.copy($name, $iniValPath, "/usr/local/bin/ini_val")
+        $this.copy($name, $iniUsrPath, "/usr/local/bin/ini_usr")
 
         # Assert *nix file format
         $commandLine = @(
             "sed -i 's/\r//' /usr/local/bin/ini_val"
             "chmod +x /usr/local/bin/ini_val"
+            "sed -i 's/\r//' /usr/local/bin/ini_usr"
+            "chmod +x /usr/local/bin/ini_usr"
             )
 
         # create default user
         if ($createDefaultUser)
         {
             $commandLine += @(
-                "/usr/sbin/addgroup --gid 1000 $($this.defaultUsename)"
-                "/usr/sbin/adduser --quiet --disabled-password --gecos '' --uid 1000 --gid 1000 $($this.defaultUsename)"
-                "/usr/sbin/usermod -aG sudo $($this.defaultUsename)"
-                "userpass=`$(/usr/bin/openssl passwd -1 $($this.defaultPassword))"
-                "/usr/sbin/usermod --password `$userpass $($this.defaultUsename)"
+                "/usr/local/bin/ini_usr $($this.defaultUsename) $($this.defaultPassword)"
                 "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsename)"
             )
         }
 
-        # set the wsl instance hostname
-        $commandLine += "/usr/local/bin/ini_val /etc/wsl.conf network.hostname $($name)"
+        # set the wsl instance hostname & cleanup
+        $commandLine += @(
+            "/usr/local/bin/ini_val /etc/wsl.conf network.hostname $($name)"
+            "rm -f /usr/local/bin/ini_usr"
+        )
         $commandLineTxt = $commandLine -Join ";"
         Write-Verbose $commandLineTxt
 

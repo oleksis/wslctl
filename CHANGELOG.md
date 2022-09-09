@@ -1,4 +1,4 @@
-v2.2.1 (working):
+v2.2.1:
 * [OPTIM] Mark system requierements (check once)
 
 v2.2.0:

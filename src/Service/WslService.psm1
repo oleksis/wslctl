@@ -216,7 +216,7 @@ Class WslService
     [int32] start([String] $name)
     {
         # warning: wsl binary always returns 0 even if no distribution exists
-        &  $this.Binary --distribution $name bash --login -c "nohup sleep 99999 </dev/null >/dev/null 2>&1 & sleep 1"
+        &  $this.Binary --distribution $name -- nohup sleep 99999 `</dev/null `>/dev/null 2`>`&1 `& sleep 1
         return $LastExitCode
     }
 

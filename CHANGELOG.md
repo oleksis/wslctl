@@ -1,7 +1,5 @@
 v2.2.0 (working):
-TODO
-* start action on alpine should not work..
-DONE
+* [BUG] start action on alpine not working
 * [EvVOL] Manage wsl output list as object (no more strings)
 * [ISSUE#19] Display error wslctl ls when no distributions
 * [EVOL] Auto-detect connect shell (i.e. allowing alpine)

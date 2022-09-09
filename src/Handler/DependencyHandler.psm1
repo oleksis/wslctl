@@ -1,5 +1,5 @@
-using module ".\Application\ServiceLocator.psm1"
-using module ".\Application\AppConfig.psm1"
+using module "..\Application\ServiceLocator.psm1"
+using module "..\Application\AppConfig.psm1"
 
 
 Class DependencyHandler

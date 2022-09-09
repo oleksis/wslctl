@@ -1,4 +1,7 @@
-v2.2.0 (working):
+v2.2.1 (working):
+* [OPTIM] Mark system requierements (check once)
+
+v2.2.0:
 * [ISSUE#18] Default user creation error on Alpine
 * [BUG] start action on alpine not working
 * [EvVOL] Manage wsl output list as object (no more strings)

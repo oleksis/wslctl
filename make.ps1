@@ -10,10 +10,10 @@ $Settings = @{
 
     # List of files to concat (in order)
     AppFilesOrderList = @(
-        "requires.ps1",
         "Model\JsonHashtableFile.psm1",
         "Application\AbstractController.psm1",
         "Application\AppConfig.psm1",
+        "Handler\DependencyHandler.psm1",
         "Application\ControllerManager.psm1",
         "Application\ControllerResolver.psm1",
         "Application\ServiceLocator.psm1",

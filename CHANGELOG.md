@@ -1,6 +1,7 @@
 v2.2.2:
 * [BUG] wsl host name truncated on unspecified instance name creation
 * [optim] Optimize subprocess wsl result
+* [BUG] add 'No instance set' when nothing in wsl lists
 
 v2.2.1:
 * [OPTIM] Mark system requierements (check once)

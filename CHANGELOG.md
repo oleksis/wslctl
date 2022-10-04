@@ -1,3 +1,7 @@
+v2.2.2:
+* [BUG] wsl host name truncated on unspecified instance name creation
+* [optim] Optimize subprocess wsl result
+
 v2.2.1:
 * [OPTIM] Mark system requierements (check once)
 

@@ -16,6 +16,7 @@ Class WslService
     [String] $defaultPassword
 
     [JsonHashtableFile] $Instances
+    [Array] $WslListCache
 
 
     WslService()
@@ -251,48 +252,52 @@ Class WslService
         }).Length -ne 0)
     }
 
-    [Array] list()
+    [Array] list() { return $this.list($false) }
+    [Array] list([Boolean] $force)
     {
-        # Inexplicably, wsl --list verbose produces UTF-16LE-encoded
-        # ("Unicode"-encoded) output rather than respecting the
-        # console's (OEM) code page.
-        $prev = [Console]::OutputEncoding;
-        [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
-        $consoleResult = @( (& $this.Binary --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" } )
-        [Console]::OutputEncoding = $prev
+        if ($force -Or $null -eq $this.WslListCache) { $this.WslListCache = @()}
 
-        $result=@()
-
-        #ISSUE-19: Display error wslctl ls when no distribution
-        $hasDistribution = (@( $consoleResult | Select-Object | Where-Object {
-                $_ -like "https://aka.ms/wslstore"
-            }).Length -eq 0)
-
-        if ($hasDistribution)
+        if ($this.WslListCache.Count -eq 0)
         {
-            $this._loadFile()
-            $consoleResult.GetEnumerator() | ForEach-Object {
-                $lineWords = [array]($_.split(" ") | Where-Object {$_})
-                $element = [WslElement]::new()
+            # Inexplicably, wsl --list verbose produces UTF-16LE-encoded
+            # ("Unicode"-encoded) output rather than respecting the
+            # console's (OEM) code page.
+            $prev = [Console]::OutputEncoding;
+            [Console]::OutputEncoding = [System.Text.Encoding]::Unicode
+            $consoleResult = @( (& $this.Binary --list --verbose | Select-Object -Skip 1) | Where-Object { $_ -ne "" } )
+            [Console]::OutputEncoding = $prev
 
-                if ($lineWords.Length -eq 4)
-                {
-                    # this is the default distribution
-                    $element.default = $true
-                    $null, $lineWords = $lineWords
+
+            #ISSUE-19: Display error wslctl ls when no distribution
+            $hasDistribution = (@( $consoleResult | Select-Object | Where-Object {
+                    $_ -like "https://aka.ms/wslstore"
+                }).Length -eq 0)
+
+            if ($hasDistribution)
+            {
+                $this._loadFile()
+                $consoleResult.GetEnumerator() | ForEach-Object {
+                    $lineWords = [array]($_.split(" ") | Where-Object {$_})
+                    $element = [WslElement]::new()
+
+                    if ($lineWords.Length -eq 4)
+                    {
+                        # this is the default distribution
+                        $element.default = $true
+                        $null, $lineWords = $lineWords
+                    }
+                    $element.name, $status, $element.wslVersion = $lineWords
+                    $element.running = $( $status -eq "Running" )
+                    if ($this.Instances.ContainsKey($element.name))
+                    {
+                        $element.from = $this.Instances.$($element.name).image
+                        $element.creation = $this.Instances.$($element.name).creation
+                    }
+                    $this.WslListCache += $element
                 }
-                $element.name, $status, $element.wslVersion = $lineWords
-                $element.running = $( $status -eq "Running" )
-                if ($this.Instances.ContainsKey($element.name))
-                {
-                    $element.from = $this.Instances.$($element.name).image
-                    $element.creation = $this.Instances.$($element.name).creation
-                }
-                $result += $element
             }
         }
-
-        return $result
+        return $this.WslListCache
     }
 
 

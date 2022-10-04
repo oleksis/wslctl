@@ -24,7 +24,6 @@ Class DefaultController : AbstractController
         $registryService = [RegistryService][ServiceLocator]::getInstance().get('registry')
 
         $wslName = $null
-        $distroFileOrName = $null
         $from = $null
         $archive = $null
         $wslVersion = $wslService.getDefaultVersion()
@@ -92,7 +91,11 @@ Class DefaultController : AbstractController
             # List all wsl instance status
             # Remove wsl List header and display own
             Write-Host "Wsl instances status:" -ForegroundColor Yellow
-            $wslService.list().GetEnumerator() | ForEach-Object {
+            $wslList = $wslService.list()
+            if ($wslList.Count -eq 0 ){
+                throw "No instance set"
+            }
+            $wslList.GetEnumerator() | ForEach-Object {
                 [ExtendedConsole]::WriteColor( @(
                     $("{0,1} "    -f "$(If ($($_.default)) {"*"} Else {" "})"),
                     $("{0,-23} " -f "$($_.name)"),
@@ -174,8 +177,11 @@ Class DefaultController : AbstractController
 
         Write-Host "Wsl instances:" -ForegroundColor Yellow
         $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
-
-        $wslService.list().GetEnumerator() | ForEach-Object {
+        $wslList = $wslService.list()
+        if ($wslList.Count -eq 0 ){
+            throw "No instance set"
+        }
+        $wslList.GetEnumerator() | ForEach-Object {
             [ExtendedConsole]::WriteColor( @(
                 $("{0,1} "   -f "$(If ($($_.default)) {"*"} Else {" "})"),
                 $("{0,-23} " -f "$($_.name)"),

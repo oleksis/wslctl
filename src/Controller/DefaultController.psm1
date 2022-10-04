@@ -31,6 +31,7 @@ Class DefaultController : AbstractController
         $createUser = $true
 
         # Parse Arguments
+        $NoOptionsArguments = @()
         foreach ($element in $Arguments)
         {
             switch ($element)
@@ -40,35 +41,24 @@ Class DefaultController : AbstractController
                 --v2 { $wslVersion = 2 }
                 Default
                 {
-                    if ( $null -eq $distroFileOrName ) { $distroFileOrName = $element }
-                    elseif ( $null -eq $wslName ) { $wslName = $element }
+                    if ( $NoOptionsArguments.Count -lt 2 ) { $NoOptionsArguments += $element }
                     else { throw "Invalid parameter" }
                 }
             }
         }
 
-        if ($distroFileOrName.EndsWith('.tar.gz') -Or $distroFileOrName.EndsWith('.tgz') -Or $distroFileOrName.EndsWith('.tar'))
+        $this._assertArgument( $NoOptionsArguments, 1, 2 )
+        if ($NoOptionsArguments[0] -cmatch '.*(.tar.gz|.tgz|.tar)$')
         {
-            # Importing a tar file as distribution source
-            # image version is in wslName argument
-            if ( $null -eq $wslName) { throw "Invalid parameter: wslName mandatory" }
-            if (-Not ($wslName -match '[^:]+:[^:]+')) { throw "Invalid parameter: wslName need version" }
-            $from = $wslName
-            $wslName = (Split-Path -Path $wslName.SubString(0, $wslName.indexOf(':') ) -Leaf) -replace '[:_]', '-'
-            $archive = $distroFileOrName
+            $archive, $NoOptionsArguments = $NoOptionsArguments
+            if ( $null -eq $NoOptionsArguments ) {  throw "Invalid parameter: wslName mandatory" }
+            if (-Not ($NoOptionsArguments -match '[^:]+:[^:]+')) { throw "Invalid parameter: wslName need version for import" }
         }
-        else
-        {
-            $from = $distroFileOrName
-            #if ( $null -eq $distroFileOrName) { $distroFileOrName = $wslName }
-            if ( $null -eq $wslName)
-            {
-                # convert <group>/<name>:x.y.z => <name>-x.y.z
-                $wslName = (Split-Path -Path $distroFileOrName -Leaf) -replace '[:_]', '-'
-            }
-        }
+        $from, $wslName = $NoOptionsArguments
+        if ( $null -eq $wslName){ $wslName = ($from -creplace '^[^/]*/', '') -creplace ':[^:]*$', '' }
+        if(-not ($wslName -cmatch '^[a-z0-9-]+$')) { throw "$wslName is not valid" }
 
-        Write-Host "* Import $wslName"
+        Write-Host "* Create $wslName from $from"
 
         Write-Host "Check import requirements ..."
         $wslService.checkBeforeImport($wslName)

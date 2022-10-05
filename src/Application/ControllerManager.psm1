@@ -8,6 +8,7 @@ Class ControllerManager
 
 
     [ControllerResolver] $resolver
+    [String[]] $defaultArguments
 
     ControllerManager ([System.Collections.Generic.List[AbstractController]] $controllers)
     {
@@ -40,6 +41,12 @@ Class ControllerManager
         return $arguments
     }
 
+    [ControllerManager] setDefaultArguments([String[]] $arguments)
+    {
+        $this.defaultArguments = $arguments
+        return $this
+    }
+
     [void] run([String[]] $arguments)
     {
         try
@@ -48,7 +55,11 @@ Class ControllerManager
             $arguments = $this._getUnixArgumentListFromCommandLine($arguments)
             if (-not $arguments)
             {
-                throw 'No command supplied'
+                if (-not $this.defaultArguments)
+                {
+                    throw 'No command supplied'
+                }
+                $arguments = $this.defaultArguments
             }
 
             $found = [Hashtable]$this.resolver.resolve($arguments)

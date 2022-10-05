@@ -42,6 +42,6 @@ $version = "2.2.2"
     [DefaultController]::new(),
     [BackupController]::new(),
     [RegistryController]::new()
-)).run( $args )
+)).setDefaultArguments(@('help')).run( $args )
 
 exit $LastExitCode

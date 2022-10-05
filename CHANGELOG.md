@@ -1,3 +1,8 @@
+v2.2.3:
+* [ISSUE#22] Optimize subprocess wsl result (new instance not found)
+* Adjust wsl instance name not valid ([a-z0-9-]*)
+* [ISSUE#23] Display help when no command set
+
 v2.2.2:
 * [BUG] wsl host name truncated on unspecified instance name creation
 * [optim] Optimize subprocess wsl result

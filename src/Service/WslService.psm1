@@ -125,6 +125,7 @@ Class WslService
                 creation = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
             })
         $this.Instances.commit()
+        $this.WslListCache = $null
 
         # copy val_ini script (suppose /usr/local/bin on all OS)
         $iniValPath = [FileUtils]::getResourcePath("ini_val.sh")
@@ -362,6 +363,7 @@ Class WslService
             write-host "Remove '$name'"
             $this.Instances.Remove($name)
             $this.Instances.commit()
+            $this.WslListCache = $null
         }
 
         $dir = $this.getLocation([String] $name)

@@ -153,6 +153,35 @@ Class DefaultController : AbstractController
         }
     }
 
+
+    [void] rename ([Array] $Arguments)
+    {
+        $this._assertArgument( $Arguments, 2 )
+
+        $wslCurrentName = $Arguments[0]
+        $wslNewName = $Arguments[1]
+        $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
+
+        if (-Not $wslService.exists($wslCurrentName))
+        {
+            throw "No instance named '$wslCurrentName' found"
+        }
+        if ($wslService.exists($wslNewName))
+        {
+            throw "Could not rename, instance '$wslNewName' already exists"
+        }
+        Write-Host ('-' * 79) -ForegroundColor Yellow
+        Write-Host "WARNING: This functionalite require to shutdown all WSL Instances."  -ForegroundColor Yellow
+        Write-Host ('-' * 79)  -ForegroundColor Yellow
+        'Press any key to continue...'
+        [System.Console]::ReadKey()
+
+        if ($wslService.rename($wslCurrentName, $wslNewName) -eq 0)
+        {
+            Write-Host "*  $wslCurrentName renamed to $wslNewName"
+        }
+    }
+
     [void] remove ([Array] $Arguments)
     {
         $this._assertArgument( $Arguments, 1 )
@@ -409,6 +438,7 @@ Class DefaultController : AbstractController
         @(
             @("   create  <distro_name> [<wsl_name>] [|--v[1|2]]   ", "Create a named wsl instance from distribution"),
             @("   convert <wsl_name> <version>                     ", "Concert instance to specified wsl version"),
+            @("   rename  <wsl_name> <wsl_name>                    ", "Rename a wsl instance"),
             @("   rm      <wsl_name>                               ", "Remove a wsl instance by name"),
             @("   exec    <wsl_name> [|<file.sh>|<cmd>]            ", "Execute specified script|cmd on wsl instance by names"),
             @("   ls                                               ", "List all created wsl instance names"),

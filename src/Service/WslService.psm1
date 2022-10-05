@@ -6,8 +6,7 @@ using module "..\Model\JsonHashtableFile.psm1"
 using module "..\Model\WslElement.psm1"
 
 
-Class WslService
-{
+Class WslService {
 
     [String] $Binary
     [String] $Location
@@ -19,8 +18,7 @@ Class WslService
     [Array] $WslListCache
 
 
-    WslService()
-    {
+    WslService() {
         $Config = ([AppConfig][ServiceLocator]::getInstance().get('config'))
 
         $this.Binary = 'c:\windows\system32\wsl.exe'
@@ -33,88 +31,74 @@ Class WslService
         $this._initialize()
     }
 
-    [void] _initialize()
-    {
-        if (-Not (Test-Path -Path $this.Location))
-        {
+    [void] _initialize() {
+        if (-Not (Test-Path -Path $this.Location)) {
             New-Item -ItemType Directory -Force -Path $this.Location | Out-Null
         }
     }
 
-    [void] _loadFile()
-    {
-        if (-Not $this.Instances)
-        {
+    [void] _loadFile() {
+        if (-Not $this.Instances) {
             $this.Instances = [JsonHashtableFile]::new($this.File, @{})
         }
     }
 
-    [String] getLocation([String] $name)
-    {
+    [String] getLocation([String] $name) {
         return  [FileUtils]::joinPath($this.Location, $name)
     }
 
 
     [void] checkBeforeImport([String] $name) { $this.checkBeforeImport($name, $false) }
-    [void] checkBeforeImport([String] $name, [Boolean] $forced)
-    {
-        if (($this.exists($name)) -And (-Not $forced))
-        {
+    [void] checkBeforeImport([String] $name, [Boolean] $forced) {
+        if (($this.exists($name)) -And (-Not $forced)) {
             throw "Instance '$name' already exists"
         }
 
         # Remove existing instance
-        if ($this.exists($name) -and $this.remove($name) -ne 0)
-        {
+        if ($this.exists($name) -and $this.remove($name) -ne 0) {
             throw "Can not destroy active $name"
         }
+        $this.checkDirectory($name, $forced)
+    }
 
+    [void] checkDirectory([String] $name) { $this.checkDirectory($name, $false) }
+    [void] checkDirectory([String] $name, [Boolean] $forced) {
         # Check target directory does not exists or is empty
         $dir = $this.getLocation($name)
-        if (Test-Path -Path $dir)
-        {
+        if (Test-Path -Path $dir) {
             $directoryInfo = Get-ChildItem $dir | Measure-Object
-            if (-Not ($directoryInfo.count -eq 0))
-            {
-                if (-not $forced)
-                {
+            if (-Not ($directoryInfo.count -eq 0)) {
+                if (-not $forced) {
                     throw "Directory $dir already in use"
                 }
                 Remove-Item -LiteralPath $dir -Force -Recurse -ErrorAction Ignore | Out-Null
-
             }
         }
-
     }
 
+
     [Int32] import ([String] $name, [String] $from, [String] $archive) { return $this.import($name, $from, $archive, -1, $false) }
-    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser)
-    {
-        if (($version -lt 1) -or ($version -gt 2))
-        {
+    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser) {
+        if (($version -lt 1) -or ($version -gt 2)) {
             $version = -1
         }
-        if ($version -eq -1)
-        {
+        if ($version -eq -1) {
             $version = $this.getDefaultVersion()
         }
 
         $dir = $this.getLocation($name)
-        if (Test-Path -Path $dir)
-        {
+        if (Test-Path -Path $dir) {
             New-Item -ItemType Directory -Force -Path $dir | Out-Null
         }
 
         & $this.Binary --import $name $dir $archive --version $version
-        if ($LastExitCode -ne 0)
-        {
+        if ($LastExitCode -ne 0) {
             throw "Could not create '$name' instance"
         }
 
         # Adjust Wsl Distro Name
         & $this.Binary --distribution $name sh -c "mkdir -p /lib/init && echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
-        if ($LastExitCode -ne 0)
-        {
+        if ($LastExitCode -ne 0) {
             throw "Could not set '$name' /lib/init/wsl-distro-name.sh"
         }
         $returnCode = 0
@@ -139,11 +123,10 @@ Class WslService
             "chmod +x /usr/local/bin/ini_val"
             "sed -i 's/\r//' /usr/local/bin/ini_usr"
             "chmod +x /usr/local/bin/ini_usr"
-            )
+        )
 
         # create default user
-        if ($createDefaultUser)
-        {
+        if ($createDefaultUser) {
             $commandLine += @(
                 "/usr/local/bin/ini_usr $($this.defaultUsename) $($this.defaultPassword)"
                 "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsename)"
@@ -156,7 +139,7 @@ Class WslService
             "rm -f /usr/local/bin/ini_usr"
         )
         $commandLineTxt = $commandLine -Join ";"
-        Write-Verbose $commandLineTxt
+        #Write-Verbose $commandLineTxt
 
         # execute all
         $returnCode = $this.exec($name, @( "$commandLineTxt" ))
@@ -164,10 +147,8 @@ Class WslService
         return $returnCode
     }
 
-    [System.Collections.Hashtable] export([String] $name, [String] $archiveName)
-    {
-        if ($this.isRunning($name))
-        {
+    [System.Collections.Hashtable] export([String] $name, [String] $archiveName) {
+        if ($this.isRunning($name)) {
             Write-Host "Stop instance '$name'"
             $this.terminate($name)
         }
@@ -186,8 +167,7 @@ Class WslService
         $this._loadFile()
         $image = $null
         $creation = $null
-        if ($this.Instances.ContainsKey($name))
-        {
+        if ($this.Instances.ContainsKey($name)) {
             $image = $this.Instances.$name.image
             $creation = $this.Instances.$name.creation
         }
@@ -206,10 +186,8 @@ Class WslService
         }
     }
 
-    [int] convert([String] $name, [int]$version)
-    {
-        if ($this.isRunning($name))
-        {
+    [int] convert([String] $name, [int]$version) {
+        if ($this.isRunning($name)) {
             Write-Host "Stop instance '$name'"
             $this.terminate($name)
         }
@@ -218,48 +196,41 @@ Class WslService
         return $LastExitCode
     }
 
-    [int32] start([String] $name)
-    {
+    [int32] start([String] $name) {
         # warning: wsl binary always returns 0 even if no distribution exists
         &  $this.Binary --distribution $name -- nohup sleep 99999 `</dev/null `>/dev/null 2`>`&1 `& sleep 1
         return $LastExitCode
     }
 
-    [Int32] terminate([String] $name)
-    {
+    [Int32] terminate([String] $name) {
         & $this.Binary --terminate $name
         return $LastExitCode
     }
 
-    [Int32] shutdown()
-    {
+    [Int32] shutdown() {
         & $this.Binary --shutdown
         return $LastExitCode
     }
 
 
-    [Boolean] isRunning([String] $name)
-    {
+    [Boolean] isRunning([String] $name) {
         return (@( $this.list() | Select-Object | Where-Object {
-                $_.name -eq $name -and $_.running -eq $true
-            }).Length -ne 0)
+                    $_.name -eq $name -and $_.running -eq $true
+                }).Length -ne 0)
     }
 
 
-    [Boolean] exists([String] $name)
-    {
+    [Boolean] exists([String] $name) {
         return (@( $this.list() | Select-Object | Where-Object {
-            $_.name -eq $name
-        }).Length -ne 0)
+                    $_.name -eq $name
+                }).Length -ne 0)
     }
 
     [Array] list() { return $this.list($false) }
-    [Array] list([Boolean] $force)
-    {
-        if ($force -Or $null -eq $this.WslListCache) { $this.WslListCache = @()}
+    [Array] list([Boolean] $force) {
+        if ($force -Or $null -eq $this.WslListCache) { $this.WslListCache = @() }
 
-        if ($this.WslListCache.Count -eq 0)
-        {
+        if ($this.WslListCache.Count -eq 0) {
             # Inexplicably, wsl --list verbose produces UTF-16LE-encoded
             # ("Unicode"-encoded) output rather than respecting the
             # console's (OEM) code page.
@@ -271,26 +242,23 @@ Class WslService
 
             #ISSUE-19: Display error wslctl ls when no distribution
             $hasDistribution = (@( $consoleResult | Select-Object | Where-Object {
-                    $_ -like "https://aka.ms/wslstore"
-                }).Length -eq 0)
+                        $_ -like "https://aka.ms/wslstore"
+                    }).Length -eq 0)
 
-            if ($hasDistribution)
-            {
+            if ($hasDistribution) {
                 $this._loadFile()
                 $consoleResult.GetEnumerator() | ForEach-Object {
-                    $lineWords = [array]($_.split(" ") | Where-Object {$_})
+                    $lineWords = [array]($_.split(" ") | Where-Object { $_ })
                     $element = [WslElement]::new()
 
-                    if ($lineWords.Length -eq 4)
-                    {
+                    if ($lineWords.Length -eq 4) {
                         # this is the default distribution
                         $element.default = $true
                         $null, $lineWords = $lineWords
                     }
                     $element.name, $status, $element.wslVersion = $lineWords
                     $element.running = $( $status -eq "Running" )
-                    if ($this.Instances.ContainsKey($element.name))
-                    {
+                    if ($this.Instances.ContainsKey($element.name)) {
                         $element.from = $this.Instances.$($element.name).image
                         $element.creation = $this.Instances.$($element.name).creation
                     }
@@ -302,41 +270,34 @@ Class WslService
     }
 
 
-    [String] status([String] $name)
-    {
-        if (-Not $this.exists($name))
-        {
+    [String] status([String] $name) {
+        if (-Not $this.exists($name)) {
             return "* $name is not a wsl instance"
         }
         $running = ( $this.list() | Select-Object | Where-Object {
                 $_.name -eq $name
             }).running
-        return $(if ($running) { "Running"} else { "Stopped" } )
+        return $(if ($running) { "Running" } else { "Stopped" } )
     }
 
-    [int] version([String] $name)
-    {
-        if (-Not $this.exists($name))
-        {
+    [int] version([String] $name) {
+        if (-Not $this.exists($name)) {
             return -1
         }
         return ( $this.list() | Select-Object | Where-Object {
-            $_.name -eq $name
-        }).wslVersion
+                $_.name -eq $name
+            }).wslVersion
 
     }
 
-    [String] getDefaultDistribution()
-    {
+    [String] getDefaultDistribution() {
         return ( $this.list() | Select-Object | Where-Object {
-            $_.default -eq $true
-        }).name
+                $_.default -eq $true
+            }).name
     }
 
-    [String] setDefaultDistribution([String] $name)
-    {
-        if (-Not $this.exists($name))
-        {
+    [String] setDefaultDistribution([String] $name) {
+        if (-Not $this.exists($name)) {
             return -1
         }
 
@@ -345,21 +306,71 @@ Class WslService
     }
 
 
-    [Int32] remove([String] $name)
-    {
-        if (-Not $this.exists($name))
-        {
+    [Int32] rename([String] $currentName, [String] $newName) {
+
+        $this.checkDirectory($newName, $true)
+        Write-Host "Shutdown WSL..."
+        $this.shutdown()
+
+        # Search instance in regedit
+        $RegPath = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss'
+        $WantedRegInfo = Get-ItemProperty $RegPath\* -EA 0 | Select-Object DistributionName, PSChildName | Where-Object { $_.DistributionName -eq "$currentName" }
+        if (-not $WantedRegInfo ) {
+            throw 'No Regedit key found'
+        }
+        # Having regedit path
+        $WantedRegPath = "$RegPath\" + $WantedRegInfo.PSChildName
+        # compute new Path
+        $BasePath = Get-ItemPropertyValue -Path $WantedRegPath -Name BasePath
+        $newPath = (Split-Path -parent $BasePath) + "\$newName"
+
+        # setting new values
+        Set-ItemProperty -Path $WantedRegPath\ -Name DistributionName -Value "$newName" -ErrorAction Stop
+        Set-ItemProperty -Path $WantedRegPath\ -Name BasePath -Value "$newPath" -ErrorAction Stop
+
+        if ($LastExitCode -ne 0) {
+            throw "Enable to rename '$currentName' instance"
+        }
+        $this._loadFile()
+        if ($this.Instances.ContainsKey($currentName)) {
+            write-host "Rename '$currentName'"
+            $this.Instances.Add($newName, @{
+                    image    = $this.Instances.$currentName.image
+                    creation = $this.Instances.$currentName.creation
+                })
+            $this.Instances.Remove($currentName)
+            $this.Instances.commit()
+            $this.WslListCache = $null
+        }
+
+        $dir = $this.getLocation([String] $currentName)
+        Rename-Item -Path $dir -NewName $newName | Out-Null
+
+        # set the wsl instance hostname
+        $commandLine += @(
+            "[ -f /etc/wsl.conf ] && sed -i 's/hostname\s*=\s*.*/hostname = $($newName)/' /etc/wsl.conf"
+            "sed -i 's/ $($currentName) */ $($newName) /' /etc/hosts"
+        )
+        $commandLineTxt = $commandLine -Join ";"
+
+        # execute all
+        $returnCode = $this.exec($newName, @( "$commandLineTxt" ), $true)
+        & $this.Binary --terminate $newName
+        return $returnCode
+    }
+
+
+    [Int32] remove([String] $name) {
+        if (-Not $this.exists($name)) {
             throw "Instance '$name' not found"
         }
 
         & $this.Binary --unregister $name
-        if ($LastExitCode -ne 0)
-        {
+        if ($LastExitCode -ne 0) {
             throw "Enable to remove '$name' instance"
         }
         $this._loadFile()
-        if ($this.Instances.ContainsKey($name))
-        {
+        if ($this.Instances.ContainsKey($name)) {
             write-host "Remove '$name'"
             $this.Instances.Remove($name)
             $this.Instances.commit()
@@ -371,22 +382,19 @@ Class WslService
         return $LastExitCode
     }
 
-    [Int32] connect([string]$name)
-    {
-        $shellArray=@('/bin/zsh', '/bin/bash', '/bin/sh')
+    [Int32] connect([string]$name) {
+        $shellArray = @('/bin/zsh', '/bin/bash', '/bin/sh')
         $cmdTxt = (( $shellArray | ForEach-Object { "if [ -x $_ ]; then $_ --login;" } ) -Join " else ") + (" fi;" * $shellArray.Length) + ' exit $?'
 
         return $this.exec($name, @("$($cmdTxt)"))
     }
 
-    [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs)
-    {
-        if (-Not ([IO.Path]::GetExtension($scriptPath) -eq '.sh'))
-        {
+    [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs) { return $this.exec($name, $scriptPath, $scriptArgs, $false) }
+    [Int32] exec([string]$name, [string]$scriptPath, [array]$scriptArgs, [Boolean]$asRoot) {
+        if (-Not ([IO.Path]::GetExtension($scriptPath) -eq '.sh')) {
             throw "Script has to be a shell file (extension '.sh')"
         }
-        if (-not (Test-Path $scriptPath -PathType leaf))
-        {
+        if (-not (Test-Path $scriptPath -PathType leaf)) {
             throw "Script not found"
         }
         $winScriptFullPath = Resolve-Path -Path $scriptPath -ErrorAction Stop
@@ -402,27 +410,26 @@ Class WslService
             "rm $scriptTmpFile"
             "exit `$return_code"
         ) -Join ";"
-        return $this.exec($name, @( "$commandLine" ))
+        return $this.exec($name, @( "$commandLine" ), $asRoot)
     }
 
-    [Int32] exec([string]$name, [array]$commandline)
-    {
+    [Int32] exec([string]$name, [array]$commandline) { return $this.exec($name, $commandline, $false) }
+    [Int32] exec([string]$name, [array]$commandline, [Boolean]$asRoot) {
         if ($null -eq $commandline ) { $commandline = @() }
-        if (-Not $this.exists($name))
-        {
+        if (-Not $this.exists($name)) {
             throw "Instance '$name' not found"
         }
 
-        $processArgs = "--distribution $name -- $commandline"
+        $processArgs = "--distribution $name "
+        if ($asRoot) { $processArgs += "-u root " }
+        $processArgs += "-- $commandline"
         $process = Start-Process $this.Binary $processArgs -NoNewWindow -Wait -ErrorAction Stop -PassThru
         return $process.ExitCode
     }
 
-    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath)
-    {
+    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath) {
         # check file exists
-        if (-not (Test-Path $winSrcPath -PathType leaf))
-        {
+        if (-not (Test-Path $winSrcPath -PathType leaf)) {
             throw "File not found"
         }
 
@@ -438,30 +445,25 @@ Class WslService
         return $this.exec($name, @( "$commandLine" ))
     }
 
-    [String] wslPath([String] $winPath)
-    {
+    [String] wslPath([String] $winPath) {
         return & $this.Binary wslpath -u $winPath.Replace('\', '\\')
     }
 
 
-    [String] winPath([String] $wslPath)
-    {
+    [String] winPath([String] $wslPath) {
         return & $this.Binary wslpath -w $wslPath.Replace('\', '\\')
     }
 
 
-    [Int32] setDefaultVersion([int] $version)
-    {
-        if (($version -lt 1) -or ($version -gt 2))
-        {
+    [Int32] setDefaultVersion([int] $version) {
+        if (($version -lt 1) -or ($version -gt 2)) {
             throw "Invalid version number $version"
         }
         & $this.Binary --set-default-version $version
         return $LastExitCode
     }
 
-    [String] getDefaultVersion()
-    {
+    [String] getDefaultVersion() {
         # Get the default wsl version
         return Get-ItemPropertyValue `
             -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Lxss `

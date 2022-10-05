@@ -1,3 +1,8 @@
+v2.2.4:
+* [ISSUE#24] Rename existing instance
+* Change hostname on rename
+* Add internal exec as root (after instance creation)
+
 v2.2.3:
 * [ISSUE#22] Optimize subprocess wsl result (new instance not found)
 * Adjust wsl instance name not valid ([a-z0-9-]*)

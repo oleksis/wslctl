@@ -1,3 +1,8 @@
+v2.2.5:
+* Alpine: init_user bug, sudo group not created
+* Alpine: init_user pref : install only if requiered shadow/sudo
+* Alpine: remove message 'WARNING: Ignoring https://dl-cdn.alpinelinux.org/alpine/v3.16/main: No such file or directory'
+
 v2.2.4:
 * [ISSUE#24] Rename existing instance
 * Change hostname on rename

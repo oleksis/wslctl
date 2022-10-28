@@ -9,15 +9,20 @@ grpname="$username"
 if [ -x /sbin/apk ]; then
 
     # Alpine default distribution does not contains required packages
-    apk update
-    apk --no-cache add shadow           # to be able to use usermod
-    apk --no-cache add --update sudo    # to configure sudoers
+    pkgs_to_install=""
+    apk info 2>/dev/null | grep shadow >/dev/null || pkgs_to_install="$pkgs_to_install shadow"
+    apk info 2>/dev/null | grep sudo >/dev/null || pkgs_to_install="$pkgs_to_install sudo"
+    [ -z "$pkgs_to_install" ] || {
+        apk update
+        apk --no-cache add $pkgs_to_install
+    }
 
     # Create user
     addgroup --gid 1000 $grpname
     adduser --disabled-password --gecos '' --uid 1000 -G $grpname  $username
-    echo "$username ALL=(ALL:ALL) ALL" > /etc/sudoers.d/$username
-    chmod 0440 /etc/sudoers.d/$username
+    grep sudo /etc/group || addgroup sudo
+    adduser $username sudo
+    sed -i 's/# *%sudo/%sudo/' /etc/sudoers
     echo "$username:$userpass" | chpasswd
 
 else

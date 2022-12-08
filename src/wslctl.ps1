@@ -23,7 +23,7 @@ using module ".\Controller\BackupController.psm1"
 using module ".\Controller\RegistryController.psm1"
 
 
-$version = "2.2.5"
+$version = "2.3.0"
 
 [ServiceLocator]::getInstance().add( 'config', [AppConfig]::new($version) )
 
@@ -39,9 +39,9 @@ $version = "2.2.5"
 
 # Start application
 [ControllerManager]::new(@(
-    [DefaultController]::new(),
-    [BackupController]::new(),
-    [RegistryController]::new()
-)).setDefaultArguments(@('help')).run( $args )
+        [DefaultController]::new(),
+        [BackupController]::new(),
+        [RegistryController]::new()
+    )).setDefaultArguments(@('help')).run( $args )
 
 exit $LastExitCode

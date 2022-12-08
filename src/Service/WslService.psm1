@@ -78,7 +78,8 @@ Class WslService {
 
 
     [Int32] import ([String] $name, [String] $from, [String] $archive) { return $this.import($name, $from, $archive, -1, $false) }
-    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser) {
+    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser) { return $this.import($name, $from, $archive, $version, $createDefaultUser, $null) }
+    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser, [String]$userPwdParam) {
         if (($version -lt 1) -or ($version -gt 2)) {
             $version = -1
         }
@@ -127,8 +128,12 @@ Class WslService {
 
         # create default user
         if ($createDefaultUser) {
+            $userPassord = $this.defaultPassword;
+            if ($null -ne $userPwdParam ) {
+                $userPassord = $userPwdParam
+            }
             $commandLine += @(
-                "/usr/local/bin/ini_usr $($this.defaultUsename) $($this.defaultPassword)"
+                "/usr/local/bin/ini_usr $($this.defaultUsename) $userPassord"
                 "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsename)"
             )
         }

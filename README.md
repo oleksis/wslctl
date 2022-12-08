@@ -83,10 +83,10 @@ The custom configuration file is a json file named `wslctl.json` located next to
 
 Supported configuration parameters :
 
-| Name     | Description                       | Default Value                                           |
-| ---      | ---                               | ---                                                     |
-| wsl      | wsl binary location               |  "c:\\windows\\system32\\wsl.exe"                       |
-| appData  | where to store everythings        | "`{$env:LOCALAPPDATA}`\\Wslctl"                         |
+| Name    | Description                | Default Value                    |
+| ------- | -------------------------- | -------------------------------- |
+| wsl     | wsl binary location        | "c:\\windows\\system32\\wsl.exe" |
+| appData | where to store everythings | "`{$env:LOCALAPPDATA}`\\Wslctl"  |
 
 
 ## Quick start
@@ -146,17 +146,16 @@ PS> wslctl --help
 
 ### Wsl managment commands
 ```bash
-   create  <distro_name> [<wsl_name>] [|--v[1|2]]   Create a named wsl instance from distribution
-   convert <wsl_name> <version>                     Concert instance to specified wsl version
-   rm      <wsl_name>                               Remove a wsl instance by name
-   exec    <wsl_name> [|<file.sh>|<cmd>]            Execute specified script|cmd on wsl instance by names
-   ls                                               List all created wsl instance names
-   start   <wsl_name>                               Start an instance by name
-   stop    <wsl_name>                               Stop an instance by name
-   status [<wsl_name>]                              List all or specified wsl Instance status
-   halt                                             Shutdown all wsl instances
-   version [|<wsl_name>|default [|<version>]]       Set/get default version or get  wsl instances version
-   build   [<Wslfile>] [--tag=<distro_name>]        Build an instance (docker like)
+   create  <distro_name> [<wsl_name>] [--pwd=<pwd>]   Create a named wsl instance from distribution
+   convert <wsl_name> <version>                       Concert instance to specified wsl version
+   rm      <wsl_name>                                 Remove a wsl instance by name
+   exec    <wsl_name> [|<file.sh>|<cmd>]              Execute specified script|cmd on wsl instance by names
+   ls                                                 List all created wsl instance names
+   start   <wsl_name>                                 Start an instance by name
+   stop    <wsl_name>                                 Stop an instance by name
+   status [<wsl_name>]                                List all or specified wsl Instance status
+   halt                                               Shutdown all wsl instances
+   version [|<wsl_name>|default [|<version>]]         Set/get default version or get  wsl instances version
 ```
 
 ### Wsl distribution registry commands
@@ -198,7 +197,7 @@ PS> wslctl --help
 ```powershell
 # create wsl instance named 'my-ubuntu' with release 'ubuntu-18.04'
 # default wsl version
-PS1> .\src\wslctl.cmd create my-ubuntu ubuntu-18.04
+PS1> .\src\wslctl.cmd create --pwd=Chang3M3 my-ubuntu ubuntu-18.04
 * Import my-ubuntu
 Check import requirements ...
 Download distribution 'ubuntu-18.04' ...
@@ -296,13 +295,13 @@ Content of the `register.json` file: a hashtable of named distribution associate
 
 Distributions properties :
 
-| Field | Description | Example |
-| --- | --- | --- |
-| date        | Date of distribution production                           | 2021/09/04 14:09:00  |
-| desciption  | Distribution description                                  | Official Archived Version",
-| archive     | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz |
-| sha256      | Archive integrity checksum (sha256)                       | 93ac63df1badf4642e0d6074ca3d31866b8fc2a7ed386460db0b915eaf447b94 |
-| size        | Archive size (human readable format)                      | 230,10 MB |
+| Field      | Description                                               | Example                                                          |
+| ---------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
+| date       | Date of distribution production                           | 2021/09/04 14:09:00                                              |
+| desciption | Distribution description                                  | Official Archived Version",                                      |
+| archive    | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-server-cloudimg-amd64-wsl.rootfs.tar.gz           |
+| sha256     | Archive integrity checksum (sha256)                       | 93ac63df1badf4642e0d6074ca3d31866b8fc2a7ed386460db0b915eaf447b94 |
+| size       | Archive size (human readable format)                      | 230,10 MB                                                        |
 
 
 ## Endpoint Implementation Example
@@ -509,15 +508,15 @@ Content of the `backups.json` file: a hashtable of named distribution backuped, 
 
 Distributions properties :
 
-| Field | Description | Example |
-| --- | --- | --- |
-| date         | Date of backup production                                 | 2021/09/04 14:09:00  |
-| description  | Backup description                                        | Retest oop |
-| archive      | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-bkp.01-amd64-wsl-rootfs.tar.gz |
-| sha256       | Archive integrity checksum (sha256)                       | df6ef87d8b449d039d49d94d9daa8b14ad34d23ce39f3d5e927b39d699a160ed |
-| size         | Archive size (human readable format)                      | 230,10 MB |
-| wslname      | Instance name from wich the backup has been realized | ubuntu-14.04.5 |
-| wslversion   | Wsl version of the backuped instance | 2 |
+| Field       | Description                                               | Example                                                          |
+| ----------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
+| date        | Date of backup production                                 | 2021/09/04 14:09:00                                              |
+| description | Backup description                                        | Retest oop                                                       |
+| archive     | Name of the distribution archive in the registry endpoint | ubuntu-14.04.5-bkp.01-amd64-wsl-rootfs.tar.gz                    |
+| sha256      | Archive integrity checksum (sha256)                       | df6ef87d8b449d039d49d94d9daa8b14ad34d23ce39f3d5e927b39d699a160ed |
+| size        | Archive size (human readable format)                      | 230,10 MB                                                        |
+| wslname     | Instance name from wich the backup has been realized      | ubuntu-14.04.5                                                   |
+| wslversion  | Wsl version of the backuped instance                      | 2                                                                |
 
 The `backup list` command is based on that file :
 

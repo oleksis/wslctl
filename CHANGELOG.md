@@ -1,3 +1,7 @@
+v2.3.0:
+* Allow to set user password on creation (vs hard coded default) - option `--pwd=`
+* Remove build option (unused) from help
+
 v2.2.5:
 * Alpine: init_user bug, sudo group not created
 * Alpine: init_user pref : install only if requiered shadow/sudo

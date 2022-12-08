@@ -40,7 +40,6 @@ Class DefaultController : AbstractController {
                 }
             }
         }
-        write-Host $userPassword
 
         $this._assertArgument( $NoOptionsArguments, 1, 2 )
         if ($NoOptionsArguments[0] -cmatch '.*(.tar.gz|.tgz|.tar)$') {
@@ -52,14 +51,11 @@ Class DefaultController : AbstractController {
         if ( $null -eq $wslName) { $wslName = ($from -creplace '^[^/]*/', '') -creplace ':[^:]*$', '' }
         if (-not ($wslName -cmatch '^[a-z0-9-]+$')) { throw "$wslName instance name is not valid" }
 
-        if (($null -ne $userPassword) -and -not( $userPassword -cmatch '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')) {
+        if (($null -ne $userPassword) -and -not ( $userPassword -cmatch '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')) {
             throw "Password is not valid: Minimum eight characters, at least one letter and one number"
         }
 
         Write-Host "* Create $wslName from $from"
-        Exit
-
-
 
         Write-Host "Check import requirements ..."
         $wslService.checkBeforeImport($wslName)

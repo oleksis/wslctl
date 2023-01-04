@@ -1,3 +1,6 @@
+v2.3.1:
+* #25 : restore error on setting wsl-distro-name
+
 v2.3.0:
 * Allow to set user password on creation (vs hard coded default) - option `--pwd=`
 * Remove build option (unused) from help

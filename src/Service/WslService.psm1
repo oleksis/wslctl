@@ -98,7 +98,7 @@ Class WslService {
         }
 
         # Adjust Wsl Distro Name
-        & $this.Binary --distribution $name sh -c "mkdir -p /lib/init && echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
+        & $this.Binary --distribution $name -u root sh -c "mkdir -p /lib/init && echo WSL_DISTRO_NAME=$name > /lib/init/wsl-distro-name.sh"
         if ($LastExitCode -ne 0) {
             throw "Could not set '$name' /lib/init/wsl-distro-name.sh"
         }

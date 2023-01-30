@@ -11,7 +11,7 @@ Class WslService {
     [String] $Binary
     [String] $Location
     [String] $File
-    [String] $defaultUsename
+    [String] $defaultUsername
     [String] $defaultPassword
 
     [JsonHashtableFile] $Instances
@@ -24,7 +24,7 @@ Class WslService {
         $this.Binary = 'c:\windows\system32\wsl.exe'
         if ( $Config.ContainsKey("wsl")) { $this.Binary = $Config.wsl }
         $this.Location = [FileUtils]::joinPath($Config.appData, "Instances")
-        $this.defaultUsename = "$env:UserName"
+        $this.defaultUsername = "$env:UserName"
         $this.defaultPassword = "ChangeMe"
 
         $this.File = [FileUtils]::joinPath($Config.appData, "wsl-instances.json")
@@ -129,12 +129,12 @@ Class WslService {
         # create default user
         if ($createDefaultUser) {
             $userPassord = $this.defaultPassword;
-            if ($null -ne $userPwdParam ) {
+            if ($userPwdParam ) {
                 $userPassord = $userPwdParam
             }
             $commandLine += @(
-                "/usr/local/bin/ini_usr $($this.defaultUsename) $userPassord"
-                "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsename)"
+                "/usr/local/bin/ini_usr $($this.defaultUsername) $userPassord"
+                "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsername)"
             )
         }
 

@@ -115,8 +115,8 @@ Class WslService {
         # copy val_ini script (suppose /usr/local/bin on all OS)
         $iniValPath = [FileUtils]::getResourcePath("ini_val.sh")
         $iniUsrPath = [FileUtils]::getResourcePath("ini_user.sh")
-        $this.copy($name, $iniValPath, "/usr/local/bin/ini_val")
-        $this.copy($name, $iniUsrPath, "/usr/local/bin/ini_usr")
+        $this.copy($name, $iniValPath, "/usr/local/bin/ini_val", $true)
+        $this.copy($name, $iniUsrPath, "/usr/local/bin/ini_usr", $true)
 
         # Assert *nix file format
         $commandLine = @(
@@ -432,7 +432,10 @@ Class WslService {
         return $process.ExitCode
     }
 
-    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath) {
+    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath){
+        return $this.copy($name,$winSrcPath,$wslDestPath, $false)
+    }
+    [int32] copy([string]$name, [string]$winSrcPath, [string]$wslDestPath, [Boolean]$asRoot){
         # check file exists
         if (-not (Test-Path $winSrcPath -PathType leaf)) {
             throw "File not found"
@@ -447,7 +450,7 @@ Class WslService {
             "return_code=`$?"
             "exit `$return_code"
         ) -Join ";"
-        return $this.exec($name, @( "$commandLine" ))
+        return $this.exec($name, @( "$commandLine" ),$asRoot)
     }
 
     [String] wslPath([String] $winPath) {

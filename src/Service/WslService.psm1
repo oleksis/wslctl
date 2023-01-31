@@ -12,7 +12,6 @@ Class WslService {
     [String] $Location
     [String] $File
     [String] $defaultUsername
-    [String] $defaultPassword
 
     [JsonHashtableFile] $Instances
     [Array] $WslListCache
@@ -25,7 +24,6 @@ Class WslService {
         if ( $Config.ContainsKey("wsl")) { $this.Binary = $Config.wsl }
         $this.Location = [FileUtils]::joinPath($Config.appData, "Instances")
         $this.defaultUsername = "$env:UserName"
-        $this.defaultPassword = "ChangeMe"
 
         $this.File = [FileUtils]::joinPath($Config.appData, "wsl-instances.json")
         $this._initialize()
@@ -78,8 +76,7 @@ Class WslService {
 
 
     [Int32] import ([String] $name, [String] $from, [String] $archive) { return $this.import($name, $from, $archive, -1, $false) }
-    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser) { return $this.import($name, $from, $archive, $version, $createDefaultUser, $null) }
-    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser, [String]$userPwdParam) {
+    [Int32] import ([String] $name, [String] $from, [String] $archive, [int] $version, [Boolean]$createDefaultUser) {
         if (($version -lt 1) -or ($version -gt 2)) {
             $version = -1
         }
@@ -128,12 +125,8 @@ Class WslService {
 
         # create default user
         if ($createDefaultUser) {
-            $userPassord = $this.defaultPassword;
-            if ($userPwdParam ) {
-                $userPassord = $userPwdParam
-            }
-            $commandLine += @(
-                "/usr/local/bin/ini_usr $($this.defaultUsername) $userPassord"
+             $commandLine += @(
+                "/usr/local/bin/ini_usr $($this.defaultUsername)"
                 "/usr/local/bin/ini_val /etc/wsl.conf user.default $($this.defaultUsername)"
             )
         }

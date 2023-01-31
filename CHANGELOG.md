@@ -1,3 +1,11 @@
+v2.3.2:
+* #27: [FONC] Change password policy
+* #25: Restore: error Could not set /lib/init/wsl-distro-name.sh
+* #26: Create: alpine user creation error when no password specified
+* #19: Display error wslctl ls when no distribution (no changes)
+* #10: [BUILD] missing ADD shell command
+* #9: [BUILD] Copy should set recusive
+
 v2.3.1:
 * #25 : restore error on setting wsl-distro-name
 

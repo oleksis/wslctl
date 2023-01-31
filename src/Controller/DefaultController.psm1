@@ -15,7 +15,7 @@ Class DefaultController : AbstractController {
     }
 
     [void] create([Array] $Arguments) {
-        $this._assertArgument( $Arguments, 0, 5 )
+        $this._assertArgument( $Arguments, 0, 4 )
         $wslService = [WslService][ServiceLocator]::getInstance().get('wsl-wrapper')
         $registryService = [RegistryService][ServiceLocator]::getInstance().get('registry')
 
@@ -24,14 +24,12 @@ Class DefaultController : AbstractController {
         $archive = $null
         $wslVersion = $wslService.getDefaultVersion()
         $createUser = $true
-        $userPassword = $null
 
         # Parse Arguments
         $NoOptionsArguments = @()
         foreach ($element in $Arguments) {
             switch -regex ($element) {
                 --no-user { $createUser = $false }
-                '--pwd=[^ ]+' { $userPassword = ($element -Split ("="))[1] }
                 --v1 { $wslVersion = 1 }
                 --v2 { $wslVersion = 2 }
                 Default {
@@ -51,9 +49,6 @@ Class DefaultController : AbstractController {
         if ( $null -eq $wslName) { $wslName = ($from -creplace '^[^/]*/', '') -creplace ':[^:]*$', '' }
         if (-not ($wslName -cmatch '^[a-z0-9-]+$')) { throw "$wslName instance name is not valid" }
 
-        if (($null -ne $userPassword) -and -not ( $userPassword -cmatch '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')) {
-            throw "Password is not valid: Minimum eight characters, at least one letter and one number"
-        }
 
         Write-Host "* Create $wslName from $from"
 
@@ -71,8 +66,7 @@ Class DefaultController : AbstractController {
             $from,
             $archive,
             $wslVersion,
-            $createUser,
-            $userPassword
+            $createUser
         )
 
         Write-Host "* $wslName created"
@@ -384,19 +378,19 @@ Class DefaultController : AbstractController {
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl managment commands:", $titleColor)
         @(
-            @("   create  <distro_name> [<wsl_name>] [--v[1|2] [--pwd=<pwd>]   ", "Create a named wsl instance from distribution"),
-            @("   convert <wsl_name> <version>                                 ", "Concert instance to specified wsl version"),
-            @("   rename  <wsl_name> <wsl_name>                                ", "Rename a wsl instance"),
-            @("   rm      <wsl_name>                                           ", "Remove a wsl instance by name"),
-            @("   exec    <wsl_name> [|<file.sh>|<cmd>]                        ", "Execute specified script|cmd on wsl instance by names"),
-            @("   ls                                                           ", "List all created wsl instance names"),
-            @("   start   <wsl_name>                                           ", "Start an instance by name"),
-            @("   stop    <wsl_name>                                           ", "Stop an instance by name"),
-            @("   status [<wsl_name>]                                          ", "List all or specified wsl Instance status"),
-            @("   halt                                                         ", "Shutdown all wsl instances"),
-            @("   version [|<wsl_name>|default [|<version>]]                   ", "Set/get default version or get wsl instances version"),
-            @("   default [|<wsl_name>]                                        ", "Set/get default distribution name")
-            #@("   build   [<Wslfile>] [--tag=<distro_name>]                    ", "Build an instance (docker like)")
+            @("   create  <distro_name> [<wsl_name>] [--v[1|2]     ", "Create a named wsl instance from distribution"),
+            @("   convert <wsl_name> <version>                     ", "Concert instance to specified wsl version"),
+            @("   rename  <wsl_name> <wsl_name>                    ", "Rename a wsl instance"),
+            @("   rm      <wsl_name>                               ", "Remove a wsl instance by name"),
+            @("   exec    <wsl_name> [|<file.sh>|<cmd>]            ", "Execute specified script|cmd on wsl instance by names"),
+            @("   ls                                               ", "List all created wsl instance names"),
+            @("   start   <wsl_name>                               ", "Start an instance by name"),
+            @("   stop    <wsl_name>                               ", "Stop an instance by name"),
+            @("   status [<wsl_name>]                              ", "List all or specified wsl Instance status"),
+            @("   halt                                             ", "Shutdown all wsl instances"),
+            @("   version [|<wsl_name>|default [|<version>]]       ", "Set/get default version or get wsl instances version"),
+            @("   default [|<wsl_name>]                            ", "Set/get default distribution name")
+            #@("   build   [<Wslfile>] [--tag=<distro_name>]       ", "Build an instance (docker like)")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
 
@@ -404,14 +398,14 @@ Class DefaultController : AbstractController {
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl distribution registry commands:", $titleColor)
         @(
-            @("   registry add    <name> <remote_url>                          ", "Add a registry repository to list"),
-            @("   registry rm     <name>                                       ", "Remove the registry repository from the list"),
-            @("   registry update                                              ", "Update distribution dictionary from registry repositories"),
-            @("   registry pull   <distro>                                     ", "Pull remote distribution to local registry"),
-            @("   registry purge                                               ", "Remove all local registry content"),
-            @("   registry search <distro_pattern>                             ", "Extract defined distributions from local registry"),
-            @("   registry ls                                                  ", "List available distributions"),
-            @("   registry repositories                                        ", "List defined registry repositories")
+            @("   registry add    <name> <remote_url>              ", "Add a registry repository to list"),
+            @("   registry rm     <name>                           ", "Remove the registry repository from the list"),
+            @("   registry update                                  ", "Update distribution dictionary from registry repositories"),
+            @("   registry pull   <distro>                         ", "Pull remote distribution to local registry"),
+            @("   registry purge                                   ", "Remove all local registry content"),
+            @("   registry search <distro_pattern>                 ", "Extract defined distributions from local registry"),
+            @("   registry ls                                      ", "List available distributions"),
+            @("   registry repositories                            ", "List defined registry repositories")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
 
@@ -419,12 +413,12 @@ Class DefaultController : AbstractController {
         [ExtendedConsole]::WriteColor()
         [ExtendedConsole]::WriteColor("Wsl backup managment commands:", $titleColor)
         @(
-            @("   backup create  <wsl_name> <description>                      ", "Create a new backup for the specified wsl instance"),
-            @("   backup rm      <backup_name>                                 ", "Remove a backup by name"),
-            @("   backup restore <backup_name> [--force]                       ", "Restore a wsl instance from backup"),
-            @("   backup search  <backup_pattern>                              ", "Find a created backup with input as pattern"),
-            @("   backup ls                                                    ", "List all created backups"),
-            @("   backup purge                                                 ", "Remove all created backups")
+            @("   backup create  <wsl_name> <description>          ", "Create a new backup for the specified wsl instance"),
+            @("   backup rm      <backup_name>                     ", "Remove a backup by name"),
+            @("   backup restore <backup_name> [--force]           ", "Restore a wsl instance from backup"),
+            @("   backup search  <backup_pattern>                  ", "Find a created backup with input as pattern"),
+            @("   backup ls                                        ", "List all created backups"),
+            @("   backup purge                                     ", "Remove all created backups")
         ) | ForEach-Object { [ExtendedConsole]::WriteColor($_, @($highlightColor, $foregroundColor)) }
 
         [ExtendedConsole]::WriteColor()

@@ -223,7 +223,7 @@ function Build_CopyResources_Task
 function Build_Archive_Task
 {
     Assert-ArchSourceFolder
-    $Version = (cmd /c powershell "$($Settings.SourceFolder)\$($Settings.AppName).ps1" --version)
+    $Version = (cmd /c pwsh "$($Settings.SourceFolder)\$($Settings.AppName).ps1" --version)
     # check return version format:
     $versionPattern = '([0-9])+\.([0-9])+\.([0-9])+\-?(.*)?'
     $semVersion = $Version -match $versionPattern
